@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #14120F;
+  --paper: #F6F1E7;
+  --brass: #C9A24B;
+  --brass-dim: #8A7238;
+  --signal: #4C6B5C;
+  --ash: #8C8578;
+}
+
+@layer base {
+  body {
+    background-color: #14120F;
+    color: #F6F1E7;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4, .font-display, .font-serif {
+    font-family: 'Fraunces', Georgia, serif;
+    font-feature-settings: "liga", "clig", "kern";
+  }
+
+  code, pre, .font-mono, .data-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-feature-settings: "tnum" 1, "zero" 1;
+  }
+}
+
+/* Hairline Ledger Dividers */
+.border-hairline {
+  border-color: rgba(138, 114, 56, 0.25);
+}
+
+.border-hairline-subtle {
+  border-color: rgba(140, 133, 120, 0.18);
+}
+
+/* Studio Ledger Paper Surface */
+.surface-paper {
+  background-color: #F6F1E7;
+  color: #14120F;
+}
+
+.surface-ink {
+  background-color: #1A1814;
+  border: 1px solid rgba(138, 114, 56, 0.22);
+}
+
+/* Ticker Pause on Hover */
+.ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* Custom Minimalist Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #14120F;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A2620;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8A7238;
+}
+
+/* Reduced Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ticker-track {
+    animation: none !important;
+    transform: none !important;
+  }
+}
