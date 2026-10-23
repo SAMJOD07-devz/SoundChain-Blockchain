@@ -7,6 +7,7 @@ import { parseEtherError, formatEtherBalance } from "../utils/ethereum";
 import { resolveIPFS, formatCid } from "../utils/ipfs";
 import { generateCryptographicStreamProof } from "../utils/streamValidator";
 import { StackedSplitBar } from "../components/StackedSplitBar";
+import { TrackCoverArt } from "../components/TrackCoverArt";
 import { ethers } from "ethers";
 import toast from "react-hot-toast";
 import {
@@ -245,87 +246,91 @@ export function TrackDetailPage() {
       </div>
 
       {/* 1. MASTER TRACK SPECIFICATION BANNER */}
-      <section className="bg-[#1A1814] border border-hairline p-6 sm:p-10 rounded-sm space-y-8">
+      <section className="bg-[#1A1814] border border-hairline p-6 sm:p-10 rounded-sm space-y-8 shadow-sm">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Track Header & Playback Trigger */}
-          <div className="lg:col-span-8 space-y-4">
-            <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
-              <span className="text-brass font-bold">
-                MASTER // {track.catalogNo}
-              </span>
-              <span className="text-ash">/</span>
-              <span className="text-ash">{track.genre}</span>
-              <span className="text-ash">/</span>
-              <span className="text-ash">{track.duration}</span>
-              <span className="text-ash">/</span>
-              <span className="text-ash">{track.bpm} BPM</span>
-            </div>
+          <div className="lg:col-span-8 flex flex-col sm:flex-row items-start gap-6">
+            <TrackCoverArt trackId={track.id} size={130} showGrooves={true} className="shrink-0" />
+            
+            <div className="space-y-3.5 flex-1">
+              <div className="flex flex-wrap items-center gap-2.5 text-xs font-sans">
+                <span className="text-brass font-bold font-mono">
+                  MASTER · {track.catalogNo}
+                </span>
+                <span className="text-ash/60">/</span>
+                <span className="text-ash">{track.genre}</span>
+                <span className="text-ash/60">/</span>
+                <span className="text-ash font-mono">{track.duration}</span>
+                <span className="text-ash/60">/</span>
+                <span className="text-ash font-mono">{track.bpm} BPM</span>
+              </div>
 
-            <h1 className="font-serif text-3xl sm:text-5xl font-bold text-paper tracking-tight">
-              {track.title}
-            </h1>
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-paper tracking-tight leading-tight">
+                {track.title}
+              </h1>
 
-            <p className="font-mono text-sm text-ash">
-              Recorded by <span className="text-paper font-semibold">{track.artist}</span> · Album:{" "}
-              <span className="text-paper/80">{track.album}</span>
-            </p>
+              <p className="text-sm text-ash font-sans">
+                Recorded by <span className="text-paper font-semibold">{track.artist}</span> · Album:{" "}
+                <span className="text-paper/85">{track.album}</span>
+              </p>
 
-            <p className="text-sm text-ash leading-relaxed max-w-2xl">
-              {track.description}
-            </p>
+              <p className="text-xs text-ash leading-relaxed max-w-2xl font-sans">
+                {track.description}
+              </p>
 
-            <div className="pt-2 flex items-center gap-4">
-              <button
-                onClick={() => {
-                  if (isThisTrackPlaying) {
-                    togglePlay();
-                  } else {
-                    playTrack(track);
-                  }
-                }}
-                className="px-5 py-2.5 bg-paper text-ink font-semibold text-xs rounded-sm hover:bg-white transition-colors inline-flex items-center gap-2"
-              >
-                {isThisTrackPlaying ? (
-                  <>
-                    <Pause className="w-3.5 h-3.5 fill-current" />
-                    <span>Pause Master Audio</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Play Master Audio</span>
-                  </>
-                )}
-              </button>
+              <div className="pt-2 flex flex-wrap items-center gap-4">
+                <button
+                  onClick={() => {
+                    if (isThisTrackPlaying) {
+                      togglePlay();
+                    } else {
+                      playTrack(track);
+                    }
+                  }}
+                  className="px-5 py-2.5 bg-paper text-ink font-semibold text-xs rounded-sm hover:bg-white transition-colors inline-flex items-center gap-2 font-sans"
+                >
+                  {isThisTrackPlaying ? (
+                    <>
+                      <Pause className="w-3.5 h-3.5 fill-current" />
+                      <span>Pause Master Audio</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Play Master Audio</span>
+                    </>
+                  )}
+                </button>
 
-              <span className="font-mono text-xs text-ash">
-                On-Chain ID: <span className="text-paper">{track.bytes32Id.slice(0, 10)}···{track.bytes32Id.slice(-6)}</span>
-              </span>
+                <span className="font-mono text-xs text-ash">
+                  On-Chain ID: <span className="text-paper">{track.bytes32Id.slice(0, 10)}···{track.bytes32Id.slice(-6)}</span>
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Quick Metric Ledger */}
-          <div className="lg:col-span-4 border-t lg:border-t-0 lg:border-l border-hairline pt-6 lg:pt-0 lg:pl-8 space-y-4 font-mono text-xs">
-            <div className="text-ash uppercase tracking-wider">
-              PROTOCOL AUDIT SPEC
+          <div className="lg:col-span-4 border-t lg:border-t-0 lg:border-l border-hairline pt-6 lg:pt-0 lg:pl-8 space-y-4 text-xs font-sans">
+            <div className="text-brass uppercase font-semibold text-[11px] tracking-wider">
+              Protocol Audit Spec
             </div>
             <div className="space-y-2">
-              <div className="flex justify-between py-1 border-b border-hairline">
+              <div className="flex justify-between py-1.5 border-b border-hairline">
                 <span className="text-ash">Split Logic:</span>
-                <span className="text-paper">Basis Points (BPS)</span>
+                <span className="text-paper font-mono">Basis Points (BPS)</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-hairline">
+              <div className="flex justify-between py-1.5 border-b border-hairline">
                 <span className="text-ash">Holding Escrow:</span>
-                <span className="text-brass font-semibold">0% (Instant)</span>
+                <span className="text-brass font-mono font-semibold">0% (Instant)</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-hairline">
+              <div className="flex justify-between py-1.5 border-b border-hairline">
                 <span className="text-ash">Stream Token:</span>
-                <span className="text-paper">LSTN (ERC-20)</span>
+                <span className="text-paper font-mono">LSTN (ERC-20)</span>
               </div>
-              <div className="flex justify-between py-1">
+              <div className="flex justify-between py-1.5">
                 <span className="text-ash">Listener Balance:</span>
-                <span className="text-brass font-bold">{lstnBalance} LSTN</span>
+                <span className="text-brass font-mono font-bold">{lstnBalance} LSTN</span>
               </div>
             </div>
           </div>
@@ -334,11 +339,11 @@ export function TrackDetailPage() {
 
         {/* Horizontal Stacked Bar (Master Cut Royalty Division) */}
         <div className="pt-6 border-t border-hairline space-y-3">
-          <div className="flex items-center justify-between font-mono text-xs">
-            <span className="text-ash uppercase tracking-wider">
-              VERIFIED CONTRACT ROYALTY SPLIT (10,000 BPS / 100%)
+          <div className="flex items-center justify-between text-xs font-sans">
+            <span className="text-ash uppercase text-[11px] font-medium tracking-wide">
+              Verified Contract Royalty Split (10,000 BPS / 100%)
             </span>
-            <span className="text-paper">No Platform Intermediary Cut</span>
+            <span className="text-paper text-[11px]">No Platform Intermediary Cut</span>
           </div>
           <StackedSplitBar splits={track.splits} isPulsing={isBarPulsing} />
         </div>
@@ -348,12 +353,12 @@ export function TrackDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Left Column: Settlement Simulator & Financial Voucher (7 cols) */}
-        <section className="lg:col-span-7 bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6">
+        <section className="lg:col-span-7 bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6 shadow-sm">
           <div className="flex items-center justify-between border-b border-hairline pb-4">
             <div>
-              <span className="font-mono text-xs text-brass uppercase tracking-widest">
-                // EXECUTE TRANSACTION
-              </span>
+              <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+                Execute Settlement
+              </p>
               <h2 className="font-serif text-2xl font-bold text-paper">
                 Simulate Direct Royalty Payout
               </h2>
@@ -472,12 +477,12 @@ export function TrackDetailPage() {
         </section>
 
         {/* Right Column: Listen-to-Earn Audio Progress Workbench (5 cols) */}
-        <section className="lg:col-span-5 bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6">
+        <section className="lg:col-span-5 bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6 shadow-sm">
           <div className="flex items-center justify-between border-b border-hairline pb-4">
             <div>
-              <span className="font-mono text-xs text-brass uppercase tracking-widest">
-                // STREAM INCENTIVE
-              </span>
+              <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+                Stream Incentive
+              </p>
               <h2 className="font-serif text-2xl font-bold text-paper">
                 Listen-to-Earn
               </h2>
@@ -585,14 +590,14 @@ export function TrackDetailPage() {
       </div>
 
       {/* 3. DECENTRALIZED IPFS LEDGER & AUDIO VERIFICATION */}
-      <section className="bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6">
+      <section className="bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-hairline gap-3">
           <div>
-            <div className="font-mono text-xs text-brass uppercase tracking-widest flex items-center gap-2">
+            <div className="text-xs text-brass uppercase font-semibold tracking-wider flex items-center gap-2 font-sans">
               <UploadCloud className="w-3.5 h-3.5 text-brass" />
-              <span>// DECENTRALIZED STORAGE PROOF</span>
+              <span>Decentralized Storage Proof</span>
             </div>
-            <h2 className="font-serif text-2xl font-bold text-paper">
+            <h2 className="font-serif text-2xl font-bold text-paper mt-0.5">
               IPFS Master Ledger & Audio Verification
             </h2>
           </div>

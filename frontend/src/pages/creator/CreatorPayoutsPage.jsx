@@ -40,25 +40,25 @@ export function CreatorPayoutsPage() {
   const trackFilterOptions = ["All", ...Array.from(new Set(allTracks.map((t) => t.title)))];
 
   return (
-    <div className="space-y-10 py-8 pb-28 max-w-6xl mx-auto font-mono text-xs">
+    <div className="space-y-8 py-8 pb-28 max-w-6xl mx-auto text-ash">
       
       {/* Header */}
       <div className="border-b border-hairline pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <div className="text-brass uppercase tracking-widest text-[11px]">
-            // AUDIT-READY FINANCIAL RECORD
-          </div>
+          <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+            Audit-Ready Financial Record
+          </p>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-paper tracking-tight">
             Royalty Payouts Ledger
           </h1>
-          <p className="text-ash text-xs">
-            Complete transaction history of all <code className="text-paper">RoyaltyDistributed</code> and <code className="text-paper">PayeePaid</code> events credited to this address.
+          <p className="text-ash text-sm">
+            Complete transaction history of all <code className="text-paper font-mono text-xs">RoyaltyDistributed</code> and <code className="text-paper font-mono text-xs">PayeePaid</code> events credited to this address.
           </p>
         </div>
 
         <button
           onClick={handleExportCSV}
-          className="px-4 py-2 bg-paper text-ink font-semibold text-xs rounded-sm hover:bg-white transition-colors inline-flex items-center gap-1.5 self-start sm:self-auto"
+          className="px-4 py-2 bg-paper text-ink font-semibold text-xs rounded-sm hover:bg-white transition-colors inline-flex items-center gap-1.5 self-start sm:self-auto font-sans"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export CSV Ledger</span>
@@ -68,12 +68,12 @@ export function CreatorPayoutsPage() {
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-3 bg-[#1A1814] border border-hairline rounded-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-ash uppercase text-[10px]">Filter Track:</span>
+          <span className="text-ash uppercase text-[11px] font-sans font-medium mr-1">Filter Track:</span>
           {trackFilterOptions.map((t) => (
             <button
               key={t}
               onClick={() => setFilterTrack(t)}
-              className={`px-2 py-1 rounded-sm text-[11px] transition-colors ${
+              className={`px-2.5 py-1 rounded-sm text-xs transition-colors font-sans ${
                 filterTrack === t
                   ? "bg-brass text-ink font-semibold"
                   : "text-ash hover:text-paper"
@@ -84,17 +84,17 @@ export function CreatorPayoutsPage() {
           ))}
         </div>
 
-        <div className="text-ash text-[11px]">
-          Showing {filtered.length} of {payoutEvents.length} transactions
+        <div className="text-ash text-xs font-sans">
+          Showing <span className="font-mono text-paper font-semibold">{filtered.length}</span> of <span className="font-mono text-paper font-semibold">{payoutEvents.length}</span> transactions
         </div>
       </div>
 
       {/* Dense Financial Table */}
-      <div className="border border-hairline bg-[#1A1814] rounded-sm overflow-hidden">
+      <div className="border border-hairline bg-[#1A1814] rounded-sm overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-hairline bg-[#100F0D] text-[10px] uppercase text-ash tracking-wider">
+              <tr className="border-b border-hairline bg-[#100F0D] text-[11px] font-medium uppercase text-ash tracking-wider font-sans">
                 <th className="py-3 px-4">Date / Time (UTC)</th>
                 <th className="py-3 px-4">Master Title</th>
                 <th className="py-3 px-4">Gross Inflow</th>
@@ -106,22 +106,22 @@ export function CreatorPayoutsPage() {
             </thead>
             <tbody className="divide-y divide-hairline">
               {filtered.map((item) => (
-                <tr key={item.id} className="hover:bg-[#100F0D] transition-colors">
-                  <td className="py-3 px-4 text-ash whitespace-nowrap">{item.date}</td>
-                  <td className="py-3 px-4">
-                    <span className="text-paper font-bold block">{item.track}</span>
-                    <span className="text-[10px] text-ash">{item.catalog}</span>
+                <tr key={item.id} className="hover:bg-[#100F0D]/60 transition-colors">
+                  <td className="py-3.5 px-4 font-mono text-ash whitespace-nowrap">{item.date}</td>
+                  <td className="py-3.5 px-4">
+                    <span className="text-paper font-serif font-bold text-sm block">{item.track}</span>
+                    <span className="text-[11px] font-mono text-ash/80">{item.catalog}</span>
                   </td>
-                  <td className="py-3 px-4 text-ash">{item.grossUsdc}</td>
-                  <td className="py-3 px-4 text-ash">
-                    {item.percent} <span className="text-[10px] text-ash/60">({item.bps})</span>
+                  <td className="py-3.5 px-4 font-mono text-ash">{item.grossUsdc}</td>
+                  <td className="py-3.5 px-4 font-mono text-ash">
+                    {item.percent} <span className="text-[10px] text-ash/70">({item.bps})</span>
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-brass">
+                  <td className="py-3.5 px-4 text-right font-mono font-bold text-brass">
                     {item.netUsdc}
                   </td>
-                  <td className="py-3 px-4 text-ash">#{item.block}</td>
-                  <td className="py-3 px-4 text-right text-ash">
-                    <span className="text-paper/80 font-mono text-[11px] truncate inline-block max-w-[120px]">
+                  <td className="py-3.5 px-4 font-mono text-ash">#{item.block}</td>
+                  <td className="py-3.5 px-4 text-right">
+                    <span className="text-paper/80 font-mono text-xs truncate inline-block max-w-[120px]">
                       {item.txHash.slice(0, 10)}···{item.txHash.slice(-4)}
                     </span>
                   </td>
@@ -131,9 +131,9 @@ export function CreatorPayoutsPage() {
           </table>
         </div>
 
-        <div className="p-4 bg-[#100F0D] border-t border-hairline flex items-center justify-between text-ash text-[11px]">
-          <span>Total Filtered Settlement: ${creatorLifetimeUsdc || "425.00"} USDC</span>
-          <span>Zero Escrow Holding · Solidity Atomic Payout</span>
+        <div className="p-4 bg-[#100F0D] border-t border-hairline flex items-center justify-between text-ash text-xs font-sans">
+          <span>Total Filtered Settlement: <span className="font-mono text-brass font-bold">${creatorLifetimeUsdc || "425.00"} USDC</span></span>
+          <span className="font-mono text-[11px] text-ash/80">Zero Escrow Holding · Solidity Atomic Payout</span>
         </div>
       </div>
 

@@ -1,22 +1,21 @@
 import React, { useRef, useState, useEffect, useMemo, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { Environment } from "@react-three/drei";
 import * as THREE from "three";
 
-// 3D Disc & Splitting Beams Scene
+// 3D Disc & Splitting Luminous Beams Scene
 function DiscScene({ mouse }) {
   const groupRef = useRef();
   const discRef = useRef();
-  const beamsRef = useRef();
   const [loadTime, setLoadTime] = useState(0);
 
-  // Define beam paths (3-4 royalty split channels fanning to the left)
+  // Define beam paths (royalty split channels fanning to the left and fading out)
   const beamCurves = useMemo(() => {
-    // Beams emerging from the disc edge and fanning outward towards the editorial content
     return [
-      { start: [0, 0.4, 0], cp: [-1.2, 0.9, 0.2], end: [-3.2, 1.4, 0], width: 0.02, color: "#C9A24B" },
-      { start: [0, 0.1, 0], cp: [-1.4, 0.3, 0.1], end: [-3.5, 0.4, 0], width: 0.024, color: "#E2BF6B" },
-      { start: [0, -0.2, 0], cp: [-1.3, -0.4, -0.1], end: [-3.3, -0.6, 0], width: 0.02, color: "#C9A24B" },
-      { start: [0, -0.5, 0], cp: [-1.1, -1.0, -0.2], end: [-2.9, -1.3, 0], width: 0.018, color: "#8A7238" },
+      { start: [-0.1, 0.35, 0.05], cp: [-1.2, 0.8, 0.25], end: [-3.4, 1.3, 0.1], width: 0.025, color: "#FFE29A" },
+      { start: [-0.1, 0.1, 0.05], cp: [-1.4, 0.25, 0.15], end: [-3.6, 0.35, 0], width: 0.03, color: "#E2BF6B" },
+      { start: [-0.1, -0.15, 0.05], cp: [-1.3, -0.35, -0.05], end: [-3.3, -0.55, 0], width: 0.025, color: "#C9A24B" },
+      { start: [-0.1, -0.4, 0.05], cp: [-1.1, -0.9, -0.15], end: [-3.0, -1.2, 0], width: 0.02, color: "#8A7238" },
     ];
   }, []);
 
@@ -25,59 +24,68 @@ function DiscScene({ mouse }) {
 
     // Slow idle rotation of the disc
     if (discRef.current) {
-      discRef.current.rotation.z -= delta * 0.15;
+      discRef.current.rotation.z -= delta * 0.12;
     }
 
-    // Subtle responsive mouse parallax
+    // Gentle responsive mouse parallax
     if (groupRef.current) {
-      const targetRotX = 0.45 + (mouse.current.y * 0.12);
-      const targetRotY = -0.35 + (mouse.current.x * 0.15);
+      const targetRotX = 0.35 + (mouse.current.y * 0.10);
+      const targetRotY = -0.28 + (mouse.current.x * 0.12);
 
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.05);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, 0.05);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.04);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, 0.04);
     }
   });
 
-  // Calculate beam animation progress: fans out on load, then softly settles
-  const beamProgress = Math.min(loadTime / 1.8, 1);
-  const beamOpacity = 0.15 + (beamProgress * 0.45);
+  const beamProgress = Math.min(loadTime / 1.5, 1);
+  const beamOpacity = 0.25 + (beamProgress * 0.55);
 
   return (
-    <group ref={groupRef} position={[0.8, 0, 0]} rotation={[0.45, -0.35, 0.2]}>
-      {/* Lights */}
-      <ambientLight intensity={0.4} color="#F6F1E7" />
-      <directionalLight position={[4, 5, 4]} intensity={1.8} color="#FFE8C0" />
-      <directionalLight position={[-3, 2, -2]} intensity={0.6} color="#8A7238" />
-      <pointLight position={[0, 0, 2]} intensity={0.8} color="#C9A24B" />
+    <group ref={groupRef} position={[0.4, 0, 0]} rotation={[0.35, -0.28, 0.15]}>
+      
+      {/* Lighting Setup (Warm key + Cool specular rim light) */}
+      <ambientLight intensity={0.7} color="#FAF5EB" />
+      <directionalLight position={[5, 6, 4]} intensity={2.5} color="#FFE6A3" castShadow />
+      <directionalLight position={[-4, 3, -3]} intensity={1.4} color="#90C0FF" />
+      <pointLight position={[0, 1, 2.5]} intensity={1.8} color="#FFE29A" distance={8} />
 
-      {/* Main Brushed Brass Mastering Disc */}
+      {/* Warehouse environment reflections for rich metallic sheen */}
+      <Environment preset="warehouse" />
+
+      {/* Main Brushed Brass Mastering Disc (Sized perfectly so it never clips) */}
       <group ref={discRef}>
-        {/* Outer Rim & Body */}
+        
+        {/* Disc Body (Radius 1.6: fits with generous margin in viewport) */}
         <mesh castShadow receiveShadow>
-          <cylinderGeometry args={[2.5, 2.5, 0.06, 64]} />
+          <cylinderGeometry args={[1.65, 1.65, 0.05, 64]} />
           <meshPhysicalMaterial
             color="#C9A24B"
-            metalness={0.88}
-            roughness={0.24}
-            clearcoat={0.35}
-            clearcoatRoughness={0.12}
-            reflectivity={0.9}
+            metalness={0.92}
+            roughness={0.32}
+            clearcoat={0.4}
+            clearcoatRoughness={0.15}
+            reflectivity={0.95}
           />
         </mesh>
 
-        {/* Outer Edge Chamfer Ring */}
-        <mesh position={[0, 0.031, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[2.42, 2.5, 64]} />
-          <meshStandardMaterial color="#8A7238" metalness={0.95} roughness={0.15} side={THREE.DoubleSide} />
+        {/* Outer Edge Chamfer Highlight Ring */}
+        <mesh position={[0, 0.026, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.58, 1.65, 64]} />
+          <meshStandardMaterial
+            color="#FFE29A"
+            metalness={0.95}
+            roughness={0.15}
+            side={THREE.DoubleSide}
+          />
         </mesh>
 
         {/* Master Lacquer Grooves (Concentric Micro-rings) */}
-        {[0.8, 1.1, 1.4, 1.7, 2.0, 2.25].map((radius, idx) => (
-          <mesh key={idx} position={[0, 0.032, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[radius, radius + 0.02, 64]} />
+        {[0.55, 0.75, 0.95, 1.15, 1.35, 1.5].map((radius, idx) => (
+          <mesh key={idx} position={[0, 0.027, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[radius, radius + 0.015, 64]} />
             <meshStandardMaterial
               color="#14120F"
-              opacity={0.35}
+              opacity={0.3}
               transparent
               roughness={0.8}
               side={THREE.DoubleSide}
@@ -85,23 +93,28 @@ function DiscScene({ mouse }) {
           </mesh>
         ))}
 
-        {/* Center Label Area (Tactile Paper Inset) */}
-        <mesh position={[0, 0.033, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.65, 48]} />
-          <meshStandardMaterial color="#221F1A" roughness={0.85} side={THREE.DoubleSide} />
+        {/* Center Label Area (Analog Paper Inset) */}
+        <mesh position={[0, 0.028, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.42, 48]} />
+          <meshStandardMaterial color="#1E1B16" roughness={0.75} side={THREE.DoubleSide} />
+        </mesh>
+
+        {/* Center Collar Ring */}
+        <mesh position={[0, 0.029, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.38, 0.42, 48]} />
+          <meshStandardMaterial color="#C9A24B" metalness={0.9} roughness={0.2} side={THREE.DoubleSide} />
         </mesh>
 
         {/* Brass Center Spindle Collar */}
-        <mesh position={[0, 0.04, 0]}>
-          <cylinderGeometry args={[0.12, 0.12, 0.08, 32]} />
-          <meshStandardMaterial color="#E2BF6B" metalness={0.95} roughness={0.1} />
+        <mesh position={[0, 0.035, 0]}>
+          <cylinderGeometry args={[0.08, 0.08, 0.06, 32]} />
+          <meshStandardMaterial color="#FFE29A" metalness={0.95} roughness={0.1} />
         </mesh>
       </group>
 
-      {/* Light Channels / Royalty Split Beams */}
-      <group ref={beamsRef}>
+      {/* Luminous Fanning Royalty Split Light Beams */}
+      <group>
         {beamCurves.map((b, idx) => {
-          // Linear interpolation for beam end points during initial load
           const currentEnd = [
             b.start[0] + (b.end[0] - b.start[0]) * beamProgress,
             b.start[1] + (b.end[1] - b.start[1]) * beamProgress,
@@ -114,7 +127,7 @@ function DiscScene({ mouse }) {
             new THREE.Vector3(...currentEnd)
           );
 
-          const points = curve.getPoints(24);
+          const points = curve.getPoints(32);
           const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
 
           return (
@@ -122,8 +135,8 @@ function DiscScene({ mouse }) {
               <lineBasicMaterial
                 color={b.color}
                 transparent
-                opacity={beamOpacity * (1 - idx * 0.12)}
-                linewidth={1}
+                opacity={beamOpacity * (1 - idx * 0.15)}
+                linewidth={2}
                 blending={THREE.AdditiveBlending}
               />
             </line>
@@ -137,20 +150,14 @@ function DiscScene({ mouse }) {
 // Fallback for devices with reduced motion, low power, or WebGL disabled
 function StaticDiscFallback() {
   return (
-    <div className="w-full h-full flex items-center justify-end relative pointer-events-none pr-4 md:pr-12">
-      <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full border border-brass-dim/30 bg-gradient-to-tr from-[#14120F] via-[#2A2314] to-[#C9A24B]/30 shadow-2xl flex items-center justify-center opacity-85">
+    <div className="w-full h-full flex items-center justify-center relative pointer-events-none p-4">
+      <div className="relative w-64 h-64 sm:w-80 sm:h-80 rounded-full border border-brass-dim/30 bg-gradient-to-tr from-[#14120F] via-[#2A2314] to-[#C9A24B]/30 shadow-2xl flex items-center justify-center">
         <div className="absolute inset-4 rounded-full border border-brass-dim/20" />
         <div className="absolute inset-10 rounded-full border border-brass/25" />
         <div className="absolute inset-16 rounded-full border border-brass-dim/20" />
-        <div className="w-20 h-20 rounded-full bg-ink border border-brass/40 flex items-center justify-center">
-          <div className="w-4 h-4 rounded-full bg-brass" />
+        <div className="w-16 h-16 rounded-full bg-ink border border-brass/40 flex items-center justify-center">
+          <div className="w-3.5 h-3.5 rounded-full bg-brass" />
         </div>
-        {/* Static Brass Split Light Tracer Lines */}
-        <svg className="absolute -left-32 top-1/2 -translate-y-1/2 w-48 h-32 overflow-visible pointer-events-none opacity-60">
-          <path d="M 160 60 C 90 20, 40 10, 0 10" fill="none" stroke="#C9A24B" strokeWidth="1.5" strokeDasharray="3 3" />
-          <path d="M 160 64 C 90 64, 40 64, -20 64" fill="none" stroke="#E2BF6B" strokeWidth="2" />
-          <path d="M 160 68 C 90 100, 40 110, 0 120" fill="none" stroke="#8A7238" strokeWidth="1.5" strokeDasharray="2 2" />
-        </svg>
       </div>
     </div>
   );
@@ -184,12 +191,12 @@ export function StudioDisc3D() {
     <div
       onMouseMove={handleMouseMove}
       className="w-full h-full relative cursor-default select-none overflow-visible"
-      style={{ minHeight: "420px" }}
+      style={{ minHeight: "460px" }}
     >
       <Suspense fallback={<StaticDiscFallback />}>
         <Canvas
-          camera={{ position: [0, 0, 5], fov: 42 }}
-          dpr={[1, 1.5]} // Performance optimization: capped at 1.5
+          camera={{ position: [0, 0, 5.2], fov: 42 }}
+          dpr={[1, 1.5]}
           gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
           onError={() => setHasError(true)}
           style={{ width: "100%", height: "100%", background: "transparent" }}

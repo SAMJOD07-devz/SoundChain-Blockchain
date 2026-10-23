@@ -297,29 +297,31 @@ export function AdminPage() {
   };
 
   return (
-    <div className="space-y-12 py-8 pb-28 max-w-4xl mx-auto font-mono text-xs">
+    <div className="space-y-10 py-8 pb-28 max-w-4xl mx-auto text-ash">
       
       {/* Header with IPFS Settings Button */}
       <div className="border-b border-hairline pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-2">
-          <div className="text-brass uppercase tracking-widest text-[11px] flex items-center gap-2">
-            <span>// MASTERING STUDIO BACK-OFFICE</span>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/50 text-[10px]">
+          <div className="flex items-center gap-2">
+            <span className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+              Mastering Studio Back-Office
+            </span>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/50 text-[10px] font-mono">
               IPFS FINAL PHASE READY
             </span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-paper tracking-tight">
             Track Registration & IPFS Split Ledger
           </h1>
-          <p className="text-ash text-xs leading-relaxed max-w-xl">
-            Register new studio masters into <code className="text-paper">RoyaltySplitter.sol</code>. Upload audio binaries and artwork directly to decentralized IPFS with atomic Basis Points (BPS) distribution.
+          <p className="text-ash text-sm leading-relaxed max-w-xl font-sans">
+            Register new studio masters into <code className="text-paper font-mono text-xs">RoyaltySplitter.sol</code>. Upload audio binaries and artwork directly to decentralized IPFS with atomic Basis Points (BPS) distribution.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setShowConfigModal(true)}
-          className="flex items-center gap-1.5 px-3 py-2 border border-hairline hover:border-brass rounded-sm text-ash hover:text-paper transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 border border-hairline hover:border-brass rounded-sm text-ash hover:text-paper transition-colors font-sans text-xs self-start sm:self-auto"
           title="Configure Pinata IPFS Gateway & JWT"
         >
           <Settings className="w-3.5 h-3.5 text-brass" />

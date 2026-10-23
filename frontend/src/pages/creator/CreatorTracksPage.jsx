@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { useWallet } from "../../context/WalletContext";
 import { getAllTracks } from "../../data/demoTracks";
 import { formatCid } from "../../utils/ipfs";
-import { StackedSplitBar } from "../../components/StackedSplitBar";
-import { ArrowRight, Settings, ExternalLink, Plus } from "lucide-react";
+import { TrackCoverArt } from "../../components/TrackCoverArt";
+import { ArrowRight, Settings, ExternalLink, Plus, ShieldCheck } from "lucide-react";
 
 export function CreatorTracksPage() {
   const { account } = useWallet();
@@ -29,25 +29,25 @@ export function CreatorTracksPage() {
   });
 
   return (
-    <div className="space-y-10 py-8 pb-28 max-w-6xl mx-auto font-mono text-xs">
+    <div className="space-y-8 py-8 pb-28 max-w-6xl mx-auto text-ash">
       
       {/* Header */}
       <div className="border-b border-hairline pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <div className="text-brass uppercase tracking-widest text-[11px]">
-            // REPERTOIRE MANAGEMENT
-          </div>
+          <p className="text-brass text-xs font-semibold uppercase tracking-wider">
+            Repertoire Management
+          </p>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-paper tracking-tight">
             My Registered Repertoire
           </h1>
-          <p className="text-ash text-xs">
+          <p className="text-ash text-sm">
             Studio masters and rights contracts where your address is registered as an active royalty payee.
           </p>
         </div>
 
         <Link
           to="/app/register-track"
-          className="px-4 py-2 bg-brass text-ink font-semibold text-xs rounded-sm hover:bg-brass-light transition-colors inline-flex items-center gap-1.5"
+          className="px-4 py-2 bg-brass text-ink font-semibold text-xs rounded-sm hover:bg-brass-light transition-colors inline-flex items-center gap-1.5 self-start sm:self-auto"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Register New Track</span>
@@ -55,60 +55,65 @@ export function CreatorTracksPage() {
       </div>
 
       {/* Financial Statement Repertoire Table */}
-      <div className="border border-hairline bg-[#1A1814] rounded-sm overflow-hidden">
+      <div className="border border-hairline bg-[#1A1814] rounded-sm overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-hairline bg-[#100F0D] text-[10px] uppercase text-ash tracking-wider">
-                <th className="py-3 px-4">Master Title</th>
-                <th className="py-3 px-4">Catalog / ID</th>
-                <th className="py-3 px-4">Your Role</th>
-                <th className="py-3 px-4">Entitled Share</th>
-                <th className="py-3 px-4 text-right">Net Earned</th>
-                <th className="py-3 px-4 text-right">Last Distribution</th>
-                <th className="py-3 px-4 text-center">Manage</th>
+              <tr className="border-b border-hairline bg-[#100F0D] text-[11px] font-medium uppercase text-ash tracking-wider">
+                <th className="py-3.5 px-4">Master Title</th>
+                <th className="py-3.5 px-4 font-sans">Catalog / ID</th>
+                <th className="py-3.5 px-4 font-sans">Your Role</th>
+                <th className="py-3.5 px-4 font-sans">Entitled Share</th>
+                <th className="py-3.5 px-4 text-right font-sans">Net Earned</th>
+                <th className="py-3.5 px-4 text-right font-sans">Last Distribution</th>
+                <th className="py-3.5 px-4 text-center font-sans">Manage</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-hairline">
               {tracksData.map((item) => (
-                <tr key={item.id} className="hover:bg-[#100F0D] transition-colors">
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-serif text-sm font-bold text-paper">
-                        {item.title}
-                      </span>
-                      {item.ipfsCid && (
-                        <span className="px-1.5 py-0.2 bg-emerald-950/70 text-emerald-400 border border-emerald-800/40 rounded text-[9px] flex items-center gap-1">
-                          <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
-                          IPFS
+                <tr key={item.id} className="hover:bg-[#100F0D]/60 transition-colors">
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-3">
+                      <TrackCoverArt trackId={item.id} size={42} showGrooves={false} className="shrink-0" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-serif text-sm font-bold text-paper">
+                            {item.title}
+                          </span>
+                          {item.ipfsCid && (
+                            <span className="px-1.5 py-0.2 bg-emerald-950/70 text-emerald-400 border border-emerald-800/40 rounded text-[9px] font-mono flex items-center gap-1">
+                              <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
+                              IPFS
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-mono text-ash/80">
+                          {item.ipfsCid ? `CID: ${formatCid(item.ipfsCid, 6, 4)}` : "Solidity 0.8.20"}
                         </span>
-                      )}
+                      </div>
                     </div>
-                    <span className="text-[10px] text-ash">
-                      {item.ipfsCid ? `CID: ${formatCid(item.ipfsCid, 6, 4)}` : "Solidity 0.8.20"}
-                    </span>
                   </td>
-                  <td className="py-4 px-4 text-ash">
-                    <span className="text-paper">{item.catalogNo}</span>
+                  <td className="py-3.5 px-4 font-mono text-paper">
+                    {item.catalogNo}
                   </td>
-                  <td className="py-4 px-4 text-ash">
+                  <td className="py-3.5 px-4 font-sans text-ash">
                     {item.role}
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="py-3.5 px-4 font-mono">
                     <span className="text-brass font-bold">{item.sharePercent}%</span>
-                    <span className="text-[10px] text-ash/60 ml-1">({item.shareBps} BPS)</span>
+                    <span className="text-[10px] text-ash/70 ml-1">({item.shareBps} BPS)</span>
                   </td>
-                  <td className="py-4 px-4 text-right">
+                  <td className="py-3.5 px-4 text-right font-mono">
                     <span className="text-paper font-bold block">{item.creatorNet}</span>
-                    <span className="text-[10px] text-ash">Gross: {item.totalGross}</span>
+                    <span className="text-[10px] text-ash/70">Gross: {item.totalGross}</span>
                   </td>
-                  <td className="py-4 px-4 text-right text-ash">
+                  <td className="py-3.5 px-4 text-right font-sans text-ash text-[11px]">
                     {item.lastPayout}
                   </td>
-                  <td className="py-4 px-4 text-center">
+                  <td className="py-3.5 px-4 text-center">
                     <Link
                       to={`/app/my-tracks/${item.id}/manage`}
-                      className="px-2.5 py-1 border border-hairline hover:border-brass text-brass rounded-sm inline-flex items-center gap-1 transition-colors"
+                      className="px-2.5 py-1 border border-hairline hover:border-brass text-brass rounded-sm inline-flex items-center gap-1 transition-colors text-xs font-sans"
                     >
                       <Settings className="w-3 h-3" />
                       <span>Manage</span>
@@ -120,9 +125,9 @@ export function CreatorTracksPage() {
           </table>
         </div>
 
-        <div className="p-4 bg-[#100F0D] border-t border-hairline flex items-center justify-between text-ash text-[11px]">
-          <span>Total Participating Tracks: {tracksData.length} Masters</span>
-          <span>All payouts settled directly via RoyaltySplitter.sol</span>
+        <div className="p-4 bg-[#100F0D] border-t border-hairline flex items-center justify-between text-ash text-xs font-sans">
+          <span>Total Participating Tracks: <span className="font-mono text-paper font-semibold">{tracksData.length}</span> Masters</span>
+          <span className="font-mono text-[11px] text-ash/80">All payouts settled directly via RoyaltySplitter.sol</span>
         </div>
       </div>
 

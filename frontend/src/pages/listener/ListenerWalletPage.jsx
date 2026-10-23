@@ -75,21 +75,21 @@ export function ListenerWalletPage() {
       {/* Header */}
       <div className="border-b border-hairline pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1.5">
-          <div className="font-mono text-xs text-brass uppercase tracking-widest">
-            // LISTENER REWARDS WALLET
-          </div>
+          <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+            Listener Rewards Wallet
+          </p>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-paper tracking-tight">
             Your Tokens & Rewards
           </h1>
-          <p className="font-mono text-xs text-ash">
-            Account: <span className="text-paper">{account || "Disconnected"}</span>
+          <p className="text-xs text-ash font-sans">
+            Account: <span className="text-paper font-mono">{account || "Disconnected"}</span>
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleCopy}
-            className="px-3 py-1.5 border border-hairline hover:border-paper font-mono text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 border border-hairline hover:border-paper text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5 font-sans transition-colors"
           >
             {copied ? <Check className="w-3 h-3 text-brass" /> : <Copy className="w-3 h-3" />}
             <span>Copy Address</span>
@@ -97,7 +97,7 @@ export function ListenerWalletPage() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="px-3 py-1.5 border border-hairline hover:border-paper font-mono text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 border border-hairline hover:border-paper text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5 font-sans transition-colors"
           >
             <RefreshCw className={`w-3 h-3 ${isRefreshing ? "animate-spin" : ""}`} />
             <span>Refresh</span>
@@ -106,44 +106,44 @@ export function ListenerWalletPage() {
       </div>
 
       {/* 1. TOKEN-FIRST BALANCE CARD */}
-      <div className="p-8 bg-[#1A1814] border border-hairline rounded-sm space-y-6">
+      <div className="p-8 bg-[#1A1814] border border-hairline rounded-sm space-y-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-hairline pb-6">
           <div>
-            <span className="font-mono text-xs text-ash uppercase tracking-wider block">
-              AVAILABLE STREAM REWARD TOKENS
+            <span className="text-xs text-ash uppercase tracking-wider block font-sans font-medium">
+              Available Stream Reward Tokens
             </span>
-            <div className="font-serif text-4xl sm:text-5xl font-bold text-brass mt-1">
-              {lstnBalance} <span className="text-xl font-normal text-paper font-mono">LSTN</span>
+            <div className="font-serif text-4xl sm:text-5xl font-bold text-brass mt-1 font-mono">
+              {lstnBalance} <span className="text-xl font-normal text-paper font-sans">LSTN</span>
             </div>
-            <span className="font-mono text-xs text-ash mt-1 block">
+            <span className="text-xs text-ash/80 mt-1 block font-sans">
               SoundChain Utility ERC-20 Token
             </span>
           </div>
 
-          <div className="sm:border-l sm:border-hairline sm:pl-8 space-y-2 font-mono text-xs">
+          <div className="sm:border-l sm:border-hairline sm:pl-8 space-y-2 text-xs font-sans">
             <div className="flex justify-between gap-6">
               <span className="text-ash">Completed Streams:</span>
-              <span className="text-paper font-bold">{totalListens} Plays</span>
+              <span className="text-paper font-bold font-mono">{totalListens} Plays</span>
             </div>
             <div className="flex justify-between gap-6">
               <span className="text-ash">Stable USDC:</span>
-              <span className="text-brass font-bold">${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} USDC</span>
+              <span className="text-brass font-bold font-mono">${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} USDC</span>
             </div>
             <div className="flex justify-between gap-6">
               <span className="text-ash">Gas / Network ETH:</span>
-              <span className="text-ash">{formatEtherBalance(ethBalance, 4)} ETH</span>
+              <span className="text-ash font-mono">{formatEtherBalance(ethBalance, 4)} ETH</span>
             </div>
             <div className="flex justify-between gap-6">
               <span className="text-ash">Stream Incentive:</span>
-              <span className="text-signal-light font-semibold">+10 LSTN / Stream</span>
+              <span className="text-signal-light font-semibold font-mono">+10 LSTN / Stream</span>
             </div>
           </div>
         </div>
 
         {/* Quick Earn More CTA */}
-        <div className="flex items-center justify-between font-mono text-xs text-ash">
+        <div className="flex items-center justify-between text-xs text-ash font-sans">
           <span>Want to accumulate more rewards?</span>
-          <Link to="/app/listen" className="text-brass hover:underline flex items-center gap-1">
+          <Link to="/app/listen" className="text-brass hover:underline flex items-center gap-1 font-medium">
             <span>Stream Next Master</span>
             <ArrowRight className="w-3 h-3" />
           </Link>
@@ -151,12 +151,12 @@ export function ListenerWalletPage() {
       </div>
 
       {/* 2. SIMPLE SEND / TRANSFER FORM */}
-      <div className="p-6 sm:p-8 bg-[#1A1814] border border-hairline rounded-sm space-y-6">
+      <div className="p-6 sm:p-8 bg-[#1A1814] border border-hairline rounded-sm space-y-6 shadow-sm">
         <div className="border-b border-hairline pb-3 flex items-center justify-between">
           <div>
-            <span className="font-mono text-xs text-brass uppercase tracking-widest">
-              // TRANSFER TOKENS
-            </span>
+            <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+              Transfer Tokens
+            </p>
             <h2 className="font-serif text-2xl font-bold text-paper mt-0.5">
               Send LSTN to a Friend
             </h2>

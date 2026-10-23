@@ -102,22 +102,22 @@ export function PortfolioPage() {
       
       {/* Header */}
       <div className="border-b border-hairline pb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div className="space-y-2">
-          <div className="font-mono text-xs text-brass uppercase tracking-widest">
-            // ACCOUNT STATEMENT
-          </div>
+        <div className="space-y-1.5">
+          <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+            Account Statement
+          </p>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-paper tracking-tight">
             Financial Ledger & Balance Sheet
           </h1>
-          <p className="font-mono text-xs text-ash">
-            Account: <span className="text-paper">{account || "Disconnected"}</span>
+          <p className="text-xs text-ash font-sans">
+            Account: <span className="text-paper font-mono">{account || "Disconnected"}</span>
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={handleCopy}
-            className="px-3 py-1.5 border border-hairline hover:border-paper font-mono text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 border border-hairline hover:border-paper text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5 transition-colors font-sans"
           >
             {copied ? <Check className="w-3 h-3 text-brass" /> : <Copy className="w-3 h-3" />}
             <span>Copy Address</span>
@@ -125,7 +125,7 @@ export function PortfolioPage() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="px-3 py-1.5 border border-hairline hover:border-paper font-mono text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 border border-hairline hover:border-paper text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5 transition-colors font-sans"
           >
             <RefreshCw className={`w-3 h-3 ${isRefreshing ? "animate-spin" : ""}`} />
             <span>Reconcile</span>
@@ -134,49 +134,49 @@ export function PortfolioPage() {
       </div>
 
       {/* 1. FINANCIAL STATEMENT LAYOUT (Label Left, Value Right, Hairline Dividers) */}
-      <section className="bg-[#1A1814] border border-hairline rounded-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-hairline bg-[#100F0D] flex items-center justify-between">
-          <span className="font-mono text-xs uppercase tracking-wider text-ash">
-            BALANCE SHEET POSITION
+      <section className="bg-[#1A1814] border border-hairline rounded-sm overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-hairline bg-[#100F0D] flex items-center justify-between font-sans text-xs">
+          <span className="uppercase tracking-wider font-semibold text-ash text-[11px]">
+            Balance Sheet Position
           </span>
-          <span className="font-mono text-xs text-brass">
+          <span className="text-brass font-medium">
             {currentAccount.role}
           </span>
         </div>
 
-        <div className="divide-y divide-hairline font-mono text-xs">
+        <div className="divide-y divide-hairline text-xs font-sans">
           
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-ash">Asset-Backed Royalty Balance ($ USDC)</span>
-            <span className="text-paper font-semibold text-sm">
+            <span className="text-paper font-semibold font-mono text-sm">
               ${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} USDC
             </span>
           </div>
 
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-ash">SoundChain Loyalty Rewards (LSTN)</span>
-            <span className="text-brass font-bold text-sm">
+            <span className="text-brass font-bold font-mono text-sm">
               {lstnBalance} LSTN
             </span>
           </div>
 
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-ash">EVM Gas Liquidity (ETH)</span>
-            <span className="text-ash font-medium text-xs">
+            <span className="text-ash font-medium font-mono text-xs">
               {formatEtherBalance(ethBalance, 4)} ETH
             </span>
           </div>
 
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-ash">Verified Studio Stream Count</span>
-            <span className="text-paper">
+            <span className="text-paper font-mono">
               {totalListens} Completed Streams
             </span>
           </div>
 
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-ash">Smart Contract Network</span>
-            <span className="text-paper flex items-center gap-2">
+            <span className="text-paper flex items-center gap-2 font-mono text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-signal" />
               <span>Hardhat Local (Chain ID: 31337)</span>
             </span>
@@ -184,7 +184,7 @@ export function PortfolioPage() {
 
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="text-ash">Settlement Protocol</span>
-            <span className="text-ash">
+            <span className="text-ash font-mono text-[11px]">
               RoyaltySplitter.sol (10,000 BPS Direct)
             </span>
           </div>
@@ -193,12 +193,12 @@ export function PortfolioPage() {
       </section>
 
       {/* 2. SIMPLE SEND LSTN FORM */}
-      <section className="bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6">
+      <section className="bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6 shadow-sm">
         <div className="border-b border-hairline pb-3 flex items-center justify-between">
           <div>
-            <span className="font-mono text-xs text-brass uppercase tracking-widest">
-              // TOKEN DISBURSEMENT
-            </span>
+            <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+              Token Disbursement
+            </p>
             <h2 className="font-serif text-2xl font-bold text-paper mt-0.5">
               Send LSTN Utility Tokens
             </h2>

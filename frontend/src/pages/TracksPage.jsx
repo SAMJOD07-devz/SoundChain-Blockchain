@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Search, X, Play, ArrowRight } from "lucide-react";
 import { getAllTracks } from "../data/demoTracks";
 import { StackedSplitBar } from "../components/StackedSplitBar";
+import { TrackCoverArt } from "../components/TrackCoverArt";
 
 export function TracksPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,22 +26,22 @@ export function TracksPage() {
   });
 
   return (
-    <div className="space-y-12 py-8">
+    <div className="space-y-10 py-8 pb-28">
       {/* Page Header (Editorial Ledger Title) */}
       <div className="border-b border-hairline pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
-          <div className="font-mono text-xs text-brass uppercase tracking-widest">
-            // MASTERING ARCHIVE & CATALOG
-          </div>
+          <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+            Mastering Archive & Catalog
+          </p>
           <h1 className="font-serif text-3xl sm:text-5xl font-bold text-paper tracking-tight">
             Discography Ledger
           </h1>
-          <p className="text-ash text-sm max-w-lg">
+          <p className="text-ash text-sm max-w-lg font-sans">
             Direct audio lacquer transfers. Every playback simulation settles collaborator splits via on-chain contract logic.
           </p>
         </div>
 
-        {/* Monospace Search Input */}
+        {/* Search Input */}
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-ash absolute left-3.5 top-3.5" />
           <input
@@ -48,7 +49,7 @@ export function TracksPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search master, artist, catalog..."
-            className="w-full bg-[#1A1814] border border-hairline rounded-sm pl-10 pr-9 py-2.5 text-xs text-paper placeholder-ash/60 focus:outline-none focus:border-brass transition-colors font-mono"
+            className="w-full bg-[#1A1814] border border-hairline rounded-sm pl-10 pr-9 py-2.5 text-xs text-paper placeholder-ash/60 focus:outline-none focus:border-brass transition-colors font-sans"
           />
           {searchQuery && (
             <button
@@ -62,8 +63,8 @@ export function TracksPage() {
       </div>
 
       {/* Editorial Genre Filter Ticker */}
-      <div className="flex items-center gap-6 border-b border-hairline pb-4 font-mono text-xs overflow-x-auto">
-        <span className="text-ash/60 uppercase">Filter:</span>
+      <div className="flex items-center gap-6 border-b border-hairline pb-4 text-xs overflow-x-auto font-sans">
+        <span className="text-ash/60 uppercase font-medium text-[11px]">Filter:</span>
         {dynamicGenres.map((genre) => {
           const isActive = selectedGenre === genre;
           return (
@@ -92,37 +93,40 @@ export function TracksPage() {
             <div
               onMouseEnter={() => setHoveredId(filteredTracks[0].id)}
               onMouseLeave={() => setHoveredId(null)}
-              className="lg:col-span-7 bg-[#1A1814] border border-hairline hover:border-brass-dim p-8 rounded-sm space-y-6 transition-colors group"
+              className="lg:col-span-7 bg-[#1A1814] border border-hairline hover:border-brass/40 p-8 rounded-sm space-y-6 transition-colors group shadow-sm"
             >
-              <div className="flex items-center justify-between font-mono text-xs">
-                <span className="text-brass font-bold">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-brass font-bold font-mono">
                   CATALOG NO. {filteredTracks[0].catalogNo}
                 </span>
-                <span className="text-ash">
+                <span className="text-ash font-mono text-[11px]">
                   {filteredTracks[0].duration} · {filteredTracks[0].bpm} BPM · {filteredTracks[0].genre}
                 </span>
               </div>
 
-              <div>
-                <h2 className="font-serif text-3xl sm:text-4xl font-bold text-paper group-hover:text-brass transition-colors">
-                  <Link to={`/track/${filteredTracks[0].id}`}>
-                    {filteredTracks[0].title}
-                  </Link>
-                </h2>
-                <p className="font-mono text-sm text-ash mt-1">
-                  Artist: <span className="text-paper">{filteredTracks[0].artist}</span>
-                </p>
+              <div className="flex items-start gap-5">
+                <TrackCoverArt trackId={filteredTracks[0].id} size={92} showGrooves={true} className="shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <h2 className="font-serif text-3xl sm:text-4xl font-bold text-paper group-hover:text-brass transition-colors leading-tight">
+                    <Link to={`/track/${filteredTracks[0].id}`}>
+                      {filteredTracks[0].title}
+                    </Link>
+                  </h2>
+                  <p className="text-sm text-ash font-sans">
+                    Artist: <span className="text-paper font-semibold">{filteredTracks[0].artist}</span>
+                  </p>
+                </div>
               </div>
 
-              <p className="text-sm text-ash leading-relaxed">
+              <p className="text-sm text-ash leading-relaxed font-sans">
                 {filteredTracks[0].description}
               </p>
 
               {/* Stacked Split Bar with inline percentage labels */}
               <div className="pt-6 border-t border-hairline space-y-2">
-                <div className="flex items-center justify-between font-mono text-xs text-ash">
-                  <span>ROYALTY DIVISION (10,000 BPS)</span>
-                  <span className="text-paper">3 Collaborators</span>
+                <div className="flex items-center justify-between text-xs text-ash font-sans">
+                  <span className="uppercase text-[11px] tracking-wide font-medium">Royalty Division (10,000 BPS)</span>
+                  <span className="text-paper font-mono text-[11px]">3 Collaborators</span>
                 </div>
                 <StackedSplitBar splits={filteredTracks[0].splits} />
               </div>
@@ -130,7 +134,7 @@ export function TracksPage() {
               <div className="pt-4 flex items-center justify-between">
                 <Link
                   to={`/track/${filteredTracks[0].id}`}
-                  className="px-5 py-2.5 bg-brass text-ink font-semibold text-xs rounded-sm hover:bg-brass-light transition-colors inline-flex items-center gap-2"
+                  className="px-5 py-2.5 bg-brass text-ink font-semibold text-xs rounded-sm hover:bg-brass-light transition-colors inline-flex items-center gap-2 font-sans"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Open Track Simulator</span>
@@ -150,25 +154,28 @@ export function TracksPage() {
                     key={track.id}
                     onMouseEnter={() => setHoveredId(track.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    className="bg-[#1A1814] border border-hairline hover:border-brass-dim p-6 rounded-sm space-y-4 transition-colors group"
+                    className="bg-[#1A1814] border border-hairline hover:border-brass/40 p-6 rounded-sm space-y-4 transition-colors group shadow-sm"
                   >
-                    <div className="flex items-center justify-between font-mono text-xs">
-                      <span className="text-ash">{track.catalogNo}</span>
-                      <span className="text-ash">{track.duration} · {track.genre}</span>
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-brass font-medium">{track.catalogNo}</span>
+                      <span className="text-ash text-[11px]">{track.duration} · {track.genre}</span>
                     </div>
 
-                    <div>
-                      <h3 className="font-serif text-2xl font-bold text-paper group-hover:text-brass transition-colors">
-                        <Link to={`/track/${track.id}`}>
-                          {track.title}
-                        </Link>
-                      </h3>
-                      <p className="font-mono text-xs text-ash mt-0.5">
-                        {track.artist}
-                      </p>
+                    <div className="flex items-center gap-4">
+                      <TrackCoverArt trackId={track.id} size={52} showGrooves={false} className="shrink-0" />
+                      <div>
+                        <h3 className="font-serif text-xl sm:text-2xl font-bold text-paper group-hover:text-brass transition-colors">
+                          <Link to={`/track/${track.id}`}>
+                            {track.title}
+                          </Link>
+                        </h3>
+                        <p className="text-xs text-ash mt-0.5 font-sans">
+                          {track.artist}
+                        </p>
+                      </div>
                     </div>
 
-                    <p className="text-xs text-ash line-clamp-2">
+                    <p className="text-xs text-ash line-clamp-2 font-sans">
                       {track.description}
                     </p>
 
@@ -183,12 +190,13 @@ export function TracksPage() {
                     <div className="pt-2 flex items-center justify-between">
                       <Link
                         to={`/track/${track.id}`}
-                        className="font-mono text-xs text-brass hover:underline inline-flex items-center gap-1"
+                        className="text-xs text-brass hover:text-brass-light flex items-center gap-1 font-sans font-medium"
                       >
-                        Inspect Ledger <ArrowRight className="w-3 h-3" />
+                        <span>Inspect Master</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
-                      <span className="font-mono text-[10px] text-ash">
-                        10,000 BPS
+                      <span className="font-mono text-[10px] text-ash/70">
+                        {track.splits?.length || 2} Payees
                       </span>
                     </div>
                   </div>
@@ -199,19 +207,17 @@ export function TracksPage() {
           </div>
         </div>
       ) : (
-        <div className="p-12 text-center border border-hairline bg-[#1A1814] rounded-sm space-y-3">
-          <p className="font-serif text-xl text-paper">No lacquer masters found</p>
-          <p className="font-mono text-xs text-ash">
-            No entries in the ledger matched "{searchQuery}". Try a different term or clear filters.
-          </p>
+        <div className="text-center py-20 border border-hairline bg-[#1A1814] rounded-sm space-y-3">
+          <p className="font-serif text-xl text-paper">No tracks matched your search.</p>
+          <p className="text-xs text-ash font-sans">Try searching by artist name, genre, or catalog number.</p>
           <button
             onClick={() => {
               setSearchQuery("");
               setSelectedGenre("All");
             }}
-            className="mt-2 px-4 py-2 border border-hairline text-xs font-mono text-brass hover:border-brass"
+            className="px-4 py-2 bg-brass text-ink font-semibold text-xs rounded-sm hover:bg-brass-light font-sans mt-2"
           >
-            Reset Filters
+            Clear Filters
           </button>
         </div>
       )}

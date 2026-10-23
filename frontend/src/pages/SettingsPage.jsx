@@ -31,26 +31,26 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-10 py-8 pb-28 max-w-3xl mx-auto font-mono text-xs">
+    <div className="space-y-8 py-8 pb-28 max-w-3xl mx-auto text-ash">
       
       {/* Header */}
       <div className="border-b border-hairline pb-6 space-y-2">
-        <div className="text-brass uppercase tracking-widest text-[11px]">
-          // SYSTEM CONFIGURATION
-        </div>
+        <p className="text-brass text-xs font-semibold uppercase tracking-wider font-sans">
+          System Configuration
+        </p>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-paper tracking-tight">
           Wallet & Node Environment
         </h1>
-        <p className="text-ash text-xs">
+        <p className="text-ash text-sm font-sans">
           Active blockchain connection, persona preferences, and demonstration account credentials.
         </p>
       </div>
 
       {/* 1. ACTIVE CONNECTION DETAILS */}
-      <div className="p-6 bg-[#1A1814] border border-hairline rounded-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-hairline pb-3">
-          <span className="text-ash uppercase text-[10px]">EVM ACCOUNT DETAILS</span>
-          <span className="text-signal-light flex items-center gap-1.5 font-bold">
+      <div className="p-6 bg-[#1A1814] border border-hairline rounded-sm space-y-4 shadow-sm">
+        <div className="flex items-center justify-between border-b border-hairline pb-3 font-sans text-xs">
+          <span className="text-ash uppercase text-[11px] font-semibold tracking-wider">EVM Account Details</span>
+          <span className="text-signal-light flex items-center gap-1.5 font-bold font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-signal" />
             Connected (Chain ID: {chainId || 31337})
           </span>
