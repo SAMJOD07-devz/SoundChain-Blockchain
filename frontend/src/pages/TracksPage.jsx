@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, X, Play, ArrowRight } from "lucide-react";
-import { DEMO_TRACKS } from "../data/demoTracks";
+import { getAllTracks } from "../data/demoTracks";
 import { StackedSplitBar } from "../components/StackedSplitBar";
 
 export function TracksPage() {
@@ -9,17 +9,18 @@ export function TracksPage() {
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [hoveredId, setHoveredId] = useState(null);
 
-  const genres = ["All", "Analogue Synth", "Ambient Minimal", "Electro Acoustic"];
+  const allTracks = getAllTracks();
+  const dynamicGenres = ["All", ...Array.from(new Set(allTracks.map((t) => t.genre).filter(Boolean)))];
 
-  const filteredTracks = DEMO_TRACKS.filter((t) => {
+  const filteredTracks = allTracks.filter((t) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       t.title.toLowerCase().includes(q) ||
       t.artist.toLowerCase().includes(q) ||
-      t.genre.toLowerCase().includes(q) ||
-      t.album.toLowerCase().includes(q);
+      (t.genre && t.genre.toLowerCase().includes(q)) ||
+      (t.album && t.album.toLowerCase().includes(q));
 
-    const matchesGenre = selectedGenre === "All" || t.genre.toLowerCase() === selectedGenre.toLowerCase();
+    const matchesGenre = selectedGenre === "All" || (t.genre && t.genre.toLowerCase() === selectedGenre.toLowerCase());
     return matchesSearch && matchesGenre;
   });
 
@@ -63,7 +64,7 @@ export function TracksPage() {
       {/* Editorial Genre Filter Ticker */}
       <div className="flex items-center gap-6 border-b border-hairline pb-4 font-mono text-xs overflow-x-auto">
         <span className="text-ash/60 uppercase">Filter:</span>
-        {genres.map((genre) => {
+        {dynamicGenres.map((genre) => {
           const isActive = selectedGenre === genre;
           return (
             <button

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { DEMO_TRACKS } from "../data/demoTracks";
+import { DEMO_TRACKS, getAllTracks } from "../data/demoTracks";
 import { audioSynth } from "../utils/audioSynth";
 
 const AudioContext = createContext(null);
@@ -22,7 +22,7 @@ export function AudioProvider({ children }) {
     setCurrentTrack(track);
     setDuration(track.durationSec || 220);
     setIsPlaying(true);
-    audioSynth.playTrack(track.id);
+    audioSynth.playTrack(track);
   };
 
   const togglePlay = () => {
@@ -31,7 +31,7 @@ export function AudioProvider({ children }) {
       pauseTrack();
     } else {
       setIsPlaying(true);
-      audioSynth.playTrack(currentTrack.id);
+      audioSynth.playTrack(currentTrack);
     }
   };
 
@@ -53,16 +53,18 @@ export function AudioProvider({ children }) {
 
   const nextTrack = () => {
     if (!currentTrack) return;
-    const currentIndex = DEMO_TRACKS.findIndex((t) => t.id === currentTrack.id);
-    const nextIdx = (currentIndex + 1) % DEMO_TRACKS.length;
-    playTrack(DEMO_TRACKS[nextIdx]);
+    const all = getAllTracks();
+    const currentIndex = all.findIndex((t) => t.id === currentTrack.id);
+    const nextIdx = (currentIndex + 1) % all.length;
+    playTrack(all[nextIdx]);
   };
 
   const prevTrack = () => {
     if (!currentTrack) return;
-    const currentIndex = DEMO_TRACKS.findIndex((t) => t.id === currentTrack.id);
-    const prevIdx = (currentIndex - 1 + DEMO_TRACKS.length) % DEMO_TRACKS.length;
-    playTrack(DEMO_TRACKS[prevIdx]);
+    const all = getAllTracks();
+    const currentIndex = all.findIndex((t) => t.id === currentTrack.id);
+    const prevIdx = (currentIndex - 1 + all.length) % all.length;
+    playTrack(all[prevIdx]);
   };
 
   // Progress timer loop when playing

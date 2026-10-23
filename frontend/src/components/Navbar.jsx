@@ -15,6 +15,7 @@ export function Navbar() {
     account,
     chainId,
     ethBalance,
+    usdcBalance,
     lstnBalance,
     userRole,
     status,
@@ -26,6 +27,7 @@ export function Navbar() {
   const navLinks = [
     { name: "Explore", path: "/" },
     { name: "Catalog", path: "/tracks" },
+    { name: "Analytics", path: "/analytics" },
     { name: "How It Works", path: "/how-it-works" },
   ];
 
@@ -120,12 +122,16 @@ export function Navbar() {
 
                     <div className="space-y-1 text-ash text-[11px]">
                       <div className="flex justify-between">
-                        <span>ETH:</span>
-                        <span className="text-paper">{formatEtherBalance(ethBalance, 4)}</span>
+                        <span>USDC:</span>
+                        <span className="text-paper font-bold">${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>LSTN:</span>
                         <span className="text-brass font-bold">{lstnBalance}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-ash/60">
+                        <span>Gas (ETH):</span>
+                        <span>{formatEtherBalance(ethBalance, 4)}</span>
                       </div>
                     </div>
 

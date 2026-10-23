@@ -110,7 +110,7 @@ export function DevAccountsDrawer() {
           </div>
 
           <div className="pt-2 border-t border-hairline flex items-center justify-between text-[10px] text-ash/60">
-            <span>Pre-funded with 10,000 test ETH</span>
+            <span>Pre-funded with $10,000 USDC</span>
             <span>Chain ID: 31337</span>
           </div>
 

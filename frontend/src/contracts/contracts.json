@@ -1,11 +1,385 @@
 {
   "network": "localhost",
   "chainId": 31337,
-  "RoyaltySplitter": {
+  "MockUSDC": {
     "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
     "abi": [
       {
         "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+          }
+        ],
+        "name": "Approval",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "previousOwner",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "from",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+          }
+        ],
+        "name": "Transfer",
+        "type": "event"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          }
+        ],
+        "name": "allowance",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "approve",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+          }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "decimals",
+        "outputs": [
+          {
+            "internalType": "uint8",
+            "name": "",
+            "type": "uint8"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "subtractedValue",
+            "type": "uint256"
+          }
+        ],
+        "name": "decreaseAllowance",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "faucet",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "addedValue",
+            "type": "uint256"
+          }
+        ],
+        "name": "increaseAllowance",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "mint",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "name",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "symbol",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "totalSupply",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "transfer",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "from",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "to",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "transferFrom",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+          }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ]
+  },
+  "RoyaltySplitter": {
+    "address": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+    "abi": [
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_usdcToken",
+            "type": "address"
+          }
+        ],
         "stateMutability": "nonpayable",
         "type": "constructor"
       },
@@ -66,6 +440,11 @@
           }
         ],
         "name": "TrackNotRegistered",
+        "type": "error"
+      },
+      {
+        "inputs": [],
+        "name": "UsdcNotConfigured",
         "type": "error"
       },
       {
@@ -139,6 +518,31 @@
           {
             "indexed": true,
             "internalType": "address",
+            "name": "payee",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "PayeePaidUSDC",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
             "name": "sender",
             "type": "address"
           },
@@ -162,6 +566,50 @@
             "type": "bytes32"
           },
           {
+            "indexed": true,
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "totalAmount",
+            "type": "uint256"
+          }
+        ],
+        "name": "RoyaltyDistributedUSDC",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "ipfsCid",
+            "type": "string"
+          }
+        ],
+        "name": "TrackIpfsCidUpdated",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          },
+          {
             "indexed": false,
             "internalType": "address[]",
             "name": "payees",
@@ -172,9 +620,34 @@
             "internalType": "uint256[]",
             "name": "sharesBps",
             "type": "uint256[]"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "ipfsCid",
+            "type": "string"
           }
         ],
         "name": "TrackRegistered",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "oldToken",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "newToken",
+            "type": "address"
+          }
+        ],
+        "name": "UsdcTokenUpdated",
         "type": "event"
       },
       {
@@ -217,6 +690,44 @@
             "internalType": "uint256",
             "name": "",
             "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          }
+        ],
+        "name": "getTotalUsdcReceived",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          }
+        ],
+        "name": "getTrackIpfsCid",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
           }
         ],
         "stateMutability": "view",
@@ -299,6 +810,24 @@
             "type": "bytes32"
           },
           {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "payRoyaltyUSDC",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address[]",
             "name": "payees",
             "type": "address[]"
@@ -315,8 +844,49 @@
         "type": "function"
       },
       {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address[]",
+            "name": "payees",
+            "type": "address[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "sharesBps",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "string",
+            "name": "ipfsCid",
+            "type": "string"
+          }
+        ],
+        "name": "registerTrackWithIpfs",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
         "inputs": [],
         "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_usdcToken",
+            "type": "address"
+          }
+        ],
+        "name": "setUsdcToken",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -333,16 +903,63 @@
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "string",
+            "name": "ipfsCid",
+            "type": "string"
+          }
+        ],
+        "name": "updateTrackIpfsCid",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "usdcToken",
+        "outputs": [
+          {
+            "internalType": "contract IERC20",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
       }
     ]
   },
   "ListenToken": {
-    "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "address": "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
     "abi": [
       {
         "inputs": [],
         "stateMutability": "nonpayable",
         "type": "constructor"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "provided",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minimum",
+            "type": "uint256"
+          }
+        ],
+        "name": "InsufficientStreamDuration",
+        "type": "error"
       },
       {
         "inputs": [],
@@ -352,6 +969,11 @@
       {
         "inputs": [],
         "name": "InvalidRewardAmount",
+        "type": "error"
+      },
+      {
+        "inputs": [],
+        "name": "InvalidStreamProofSignature",
         "type": "error"
       },
       {
@@ -373,6 +995,22 @@
           }
         ],
         "name": "MaxSupplyExceeded",
+        "type": "error"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "proofHash",
+            "type": "bytes32"
+          }
+        ],
+        "name": "ProofAlreadyConsumed",
+        "type": "error"
+      },
+      {
+        "inputs": [],
+        "name": "ValidatorNotConfigured",
         "type": "error"
       },
       {
@@ -469,6 +1107,62 @@
           {
             "indexed": true,
             "internalType": "address",
+            "name": "listener",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "listenSeconds",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "bytes32",
+            "name": "proofHash",
+            "type": "bytes32"
+          }
+        ],
+        "name": "StreamProofVerified",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "oldValidator",
+            "type": "address"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "newValidator",
+            "type": "address"
+          }
+        ],
+        "name": "StreamValidatorUpdated",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "address",
             "name": "from",
             "type": "address"
           },
@@ -491,6 +1185,19 @@
       {
         "inputs": [],
         "name": "MAX_SUPPLY",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "MIN_STREAM_SECONDS",
         "outputs": [
           {
             "internalType": "uint256",
@@ -676,6 +1383,39 @@
         "type": "function"
       },
       {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "listener",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "trackId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "listenSeconds",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "name": "rewardListenerWithProof",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
         "inputs": [],
         "name": "rewardPerListen",
         "outputs": [
@@ -699,6 +1439,32 @@
         "name": "setRewardPerListen",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_validator",
+            "type": "address"
+          }
+        ],
+        "name": "setStreamValidator",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "streamValidator",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
         "type": "function"
       },
       {
@@ -810,6 +1576,25 @@
         "name": "transferOwnership",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "name": "usedProofHashes",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "view",
         "type": "function"
       }
     ]

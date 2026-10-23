@@ -4,13 +4,18 @@ const { ethers } = require("hardhat");
 describe("SoundChain Smart Contracts", function () {
   let RoyaltySplitter, splitter;
   let ListenToken, token;
+  let MockUSDC, usdc;
   let owner, artist, producer, songwriter, listener, attacker;
 
   beforeEach(async function () {
     [owner, artist, producer, songwriter, listener, attacker] = await ethers.getSigners();
 
+    MockUSDC = await ethers.getContractFactory("MockUSDC");
+    usdc = await MockUSDC.deploy();
+    await usdc.waitForDeployment();
+
     RoyaltySplitter = await ethers.getContractFactory("RoyaltySplitter");
-    splitter = await RoyaltySplitter.deploy();
+    splitter = await RoyaltySplitter.deploy(await usdc.getAddress());
     await splitter.waitForDeployment();
 
     ListenToken = await ethers.getContractFactory("ListenToken");
@@ -32,13 +37,33 @@ describe("SoundChain Smart Contracts", function () {
     it("Should register a track successfully with valid 10000 BPS", async function () {
       await expect(splitter.registerTrack(trackId, payees, sharesBps))
         .to.emit(splitter, "TrackRegistered")
-        .withArgs(trackId, payees, sharesBps);
+        .withArgs(trackId, payees, sharesBps, "");
 
       const [storedPayees, storedShares] = await splitter.getTrackPayees(trackId);
       expect(storedPayees.length).to.equal(3);
       expect(storedShares[0]).to.equal(5000n);
       expect(storedShares[1]).to.equal(3000n);
       expect(storedShares[2]).to.equal(2000n);
+      expect(await splitter.getTrackIpfsCid(trackId)).to.equal("");
+    });
+
+    it("Should register track with decentralized IPFS CID and allow CID updates", async function () {
+      const ipfsTrackId = ethers.id("ipfs-track-1");
+      const sampleCid = "ipfs://bafybeicv3l6s76evptz7i7y3w3r2764f6oowc4yq4c33f677n6h66s4a2y";
+
+      await expect(splitter.registerTrackWithIpfs(ipfsTrackId, payees, sharesBps, sampleCid))
+        .to.emit(splitter, "TrackRegistered")
+        .withArgs(ipfsTrackId, payees, sharesBps, sampleCid);
+
+      expect(await splitter.getTrackIpfsCid(ipfsTrackId)).to.equal(sampleCid);
+
+      // Update IPFS CID
+      const updatedCid = "ipfs://bafybeifk4v2i46a2tcvh7q3q2w7jnv5g3wom5qvwg43v36v45f2a4f4b2y";
+      await expect(splitter.updateTrackIpfsCid(ipfsTrackId, updatedCid))
+        .to.emit(splitter, "TrackIpfsCidUpdated")
+        .withArgs(ipfsTrackId, updatedCid);
+
+      expect(await splitter.getTrackIpfsCid(ipfsTrackId)).to.equal(updatedCid);
     });
 
     it("Should reject track registration if shares total is not 10000 BPS", async function () {
@@ -86,6 +111,36 @@ describe("SoundChain Smart Contracts", function () {
       expect(songwriterFinal - songwriterInitial).to.equal(ethers.parseEther("0.2"));
 
       expect(await splitter.getTotalReceived(trackId)).to.equal(paymentAmount);
+    });
+
+    it("Should accurately distribute stable USDC royalties according to payee basis points", async function () {
+      await splitter.registerTrack(trackId, payees, sharesBps);
+
+      const usdcPayment = ethers.parseUnits("100", 6); // 100 USDC ($100.00)
+      // Mint 100 USDC to listener and approve splitter
+      await usdc.mint(listener.address, usdcPayment);
+      await usdc.connect(listener).approve(await splitter.getAddress(), usdcPayment);
+
+      const artistInitial = await usdc.balanceOf(artist.address);
+      const producerInitial = await usdc.balanceOf(producer.address);
+      const songwriterInitial = await usdc.balanceOf(songwriter.address);
+
+      await expect(splitter.connect(listener).payRoyaltyUSDC(trackId, usdcPayment))
+        .to.emit(splitter, "RoyaltyDistributedUSDC")
+        .withArgs(trackId, listener.address, usdcPayment);
+
+      const artistFinal = await usdc.balanceOf(artist.address);
+      const producerFinal = await usdc.balanceOf(producer.address);
+      const songwriterFinal = await usdc.balanceOf(songwriter.address);
+
+      // 50% of $100 = $50 (50 * 10^6)
+      expect(artistFinal - artistInitial).to.equal(ethers.parseUnits("50", 6));
+      // 30% of $100 = $30 (30 * 10^6)
+      expect(producerFinal - producerInitial).to.equal(ethers.parseUnits("30", 6));
+      // 20% of $100 = $20 (20 * 10^6)
+      expect(songwriterFinal - songwriterInitial).to.equal(ethers.parseUnits("20", 6));
+
+      expect(await splitter.getTotalUsdcReceived(trackId)).to.equal(usdcPayment);
     });
 
     it("Should prevent reentrancy attacks during royalty payouts", async function () {
@@ -158,6 +213,95 @@ describe("SoundChain Smart Contracts", function () {
       await expect(
         token.rewardListener(listener.address)
       ).to.be.revertedWithCustomError(token, "MaxSupplyExceeded");
+    });
+
+    describe("Cryptographic Stream Proofs & Anti-Bot Verification", function () {
+      const streamTrackId = ethers.id("stream-test-track");
+      let chainId;
+      let tokenAddress;
+
+      beforeEach(async function () {
+        const net = await ethers.provider.getNetwork();
+        chainId = net.chainId;
+        tokenAddress = await token.getAddress();
+      });
+
+      async function generateStreamProof(signerWallet, listenerAddr, track, seconds, nonceVal) {
+        const msgHash = ethers.solidityPackedKeccak256(
+          ["address", "bytes32", "uint256", "uint256", "uint256", "address"],
+          [listenerAddr, track, seconds, nonceVal, chainId, tokenAddress]
+        );
+        const sig = await signerWallet.signMessage(ethers.getBytes(msgHash));
+        return { msgHash, sig };
+      }
+
+      it("Should mint tokens upon submitting a valid cryptographic stream proof", async function () {
+        const listenSeconds = 12;
+        const nonce = 1001;
+        const { sig, msgHash } = await generateStreamProof(owner, listener.address, streamTrackId, listenSeconds, nonce);
+
+        await expect(
+          token.connect(listener).rewardListenerWithProof(listener.address, streamTrackId, listenSeconds, nonce, sig)
+        )
+          .to.emit(token, "StreamProofVerified")
+          .withArgs(listener.address, streamTrackId, listenSeconds, nonce, msgHash)
+          .and.to.emit(token, "ListenerRewarded")
+          .withArgs(listener.address, ethers.parseEther("10"), 1n);
+
+        expect(await token.balanceOf(listener.address)).to.equal(ethers.parseEther("10"));
+        expect(await token.totalListens(listener.address)).to.equal(1n);
+        expect(await token.usedProofHashes(msgHash)).to.be.true;
+      });
+
+      it("Should reject stream proof if playback duration is less than 10 seconds", async function () {
+        const shortDuration = 8;
+        const nonce = 1002;
+        const { sig } = await generateStreamProof(owner, listener.address, streamTrackId, shortDuration, nonce);
+
+        await expect(
+          token.connect(listener).rewardListenerWithProof(listener.address, streamTrackId, shortDuration, nonce, sig)
+        ).to.be.revertedWithCustomError(token, "InsufficientStreamDuration");
+      });
+
+      it("Should reject stream proof signed by unauthorized attacker", async function () {
+        const listenSeconds = 15;
+        const nonce = 1003;
+        // Attacker attempts to forge validator signature
+        const { sig } = await generateStreamProof(attacker, listener.address, streamTrackId, listenSeconds, nonce);
+
+        await expect(
+          token.connect(listener).rewardListenerWithProof(listener.address, streamTrackId, listenSeconds, nonce, sig)
+        ).to.be.revertedWithCustomError(token, "InvalidStreamProofSignature");
+      });
+
+      it("Should prevent replay attacks by rejecting duplicate proof hashes", async function () {
+        const listenSeconds = 14;
+        const nonce = 1004;
+        const { sig } = await generateStreamProof(owner, listener.address, streamTrackId, listenSeconds, nonce);
+
+        // First redemption succeeds
+        await token.connect(listener).rewardListenerWithProof(listener.address, streamTrackId, listenSeconds, nonce, sig);
+
+        // Second redemption with identical proof reverts
+        await expect(
+          token.connect(listener).rewardListenerWithProof(listener.address, streamTrackId, listenSeconds, nonce, sig)
+        ).to.be.revertedWithCustomError(token, "ProofAlreadyConsumed");
+      });
+
+      it("Should allow owner to rotate stream validator and accept proofs from new validator", async function () {
+        const newValidator = producer;
+        await expect(token.setStreamValidator(newValidator.address))
+          .to.emit(token, "StreamValidatorUpdated")
+          .withArgs(owner.address, newValidator.address);
+
+        expect(await token.streamValidator()).to.equal(newValidator.address);
+
+        // Proof signed by new validator succeeds
+        const { sig } = await generateStreamProof(newValidator, listener.address, streamTrackId, 12, 1005);
+        await expect(
+          token.connect(listener).rewardListenerWithProof(listener.address, streamTrackId, 12, 1005, sig)
+        ).to.emit(token, "ListenerRewarded");
+      });
     });
   });
 });

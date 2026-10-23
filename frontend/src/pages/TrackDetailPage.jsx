@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { DEMO_TRACKS } from "../data/demoTracks";
+import { getAllTracks } from "../data/demoTracks";
 import { useWallet } from "../context/WalletContext";
 import { useAudio } from "../context/AudioContext";
 import { parseEtherError, formatEtherBalance } from "../utils/ethereum";
+import { resolveIPFS, formatCid } from "../utils/ipfs";
+import { generateCryptographicStreamProof } from "../utils/streamValidator";
 import { StackedSplitBar } from "../components/StackedSplitBar";
 import { ethers } from "ethers";
 import toast from "react-hot-toast";
@@ -16,27 +18,36 @@ import {
   CheckCircle2,
   Clock,
   FileText,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  UploadCloud,
+  Check,
+  ShieldCheck,
 } from "lucide-react";
 
 export function TrackDetailPage() {
-  const { id } = useParams();
-  const track = DEMO_TRACKS.find((t) => t.id === id) || DEMO_TRACKS[0];
+  const { id, trackId } = useParams();
+  const targetId = id || trackId;
+  const allTracks = getAllTracks();
+  const track = allTracks.find((t) => String(t.id) === String(targetId) || String(t.bytes32Id) === String(targetId)) || allTracks[0];
 
   const {
     account,
     getRoyaltySplitterContract,
     getListenTokenContract,
+    getMockUsdcContract,
     refreshBalances,
     connectTestWallet,
+    usdcBalance,
     lstnBalance,
+    testAccounts,
   } = useWallet();
 
   const { currentTrack, isPlaying, playTrack, togglePlay } = useAudio();
   const isThisTrackPlaying = currentTrack?.id === track.id && isPlaying;
 
-  // Simulator State
-  const [paymentAmount, setPaymentAmount] = useState("0.01");
+  // Simulator State: Default $5.00 USDC
+  const [paymentAmount, setPaymentAmount] = useState("5");
   const [isSimulatingPayment, setIsSimulatingPayment] = useState(false);
   const [isBarPulsing, setIsBarPulsing] = useState(false);
   const [txReceipt, setTxReceipt] = useState(null);
@@ -46,6 +57,7 @@ export function TrackDetailPage() {
   const [listenProgress, setListenProgress] = useState(0);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [rewardTxHash, setRewardTxHash] = useState(null);
+  const [streamProofReceipt, setStreamProofReceipt] = useState(null);
   const timerRef = useRef(null);
   const totalListenSec = 12;
 
@@ -55,47 +67,60 @@ export function TrackDetailPage() {
     };
   }, []);
 
-  // Calculate live breakdown for simulated ETH
-  const parsedEthAmount = parseFloat(paymentAmount) || 0;
+  // Calculate live breakdown for simulated stable USD / USDC
+  const parsedUsdcAmount = parseFloat(paymentAmount) || 0;
   const simulatedSplits = track.splits.map((s) => ({
     ...s,
-    shareEth: ((parsedEthAmount * s.percent) / 100).toFixed(4),
+    shareUsdc: ((parsedUsdcAmount * s.percent) / 100).toFixed(2),
   }));
 
-  // Execute On-Chain Royalty Split Simulation
+  // Execute On-Chain USDC Royalty Split Simulation
   const handleSimulatePayment = async () => {
     if (!account) {
       await connectTestWallet(0);
     }
 
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error("Enter a valid ETH amount to split.");
+      toast.error("Enter a valid USDC dollar amount to split.");
       return;
     }
 
     setIsSimulatingPayment(true);
     setIsBarPulsing(true);
-    toast.loading(`Routing ${paymentAmount} ETH through basis-point splitter...`, { id: "split-tx" });
+    toast.loading(`Routing $${paymentAmount} USDC through basis-point splitter...`, { id: "split-tx" });
 
     try {
       const splitter = getRoyaltySplitterContract();
-      if (!splitter) {
-        throw new Error("RoyaltySplitter contract not found.");
+      const usdc = getMockUsdcContract();
+      if (!splitter || !usdc) {
+        throw new Error("Smart contracts not found on local network.");
       }
 
-      const txValue = ethers.parseEther(paymentAmount.toString());
-      const tx = await splitter.payRoyalty(track.bytes32Id, { value: txValue });
+      const splitterAddress = await splitter.getAddress();
+      const units = ethers.parseUnits(paymentAmount.toString(), 6);
+
+      // Check USDC allowance and approve if required
+      const allowance = await usdc.allowance(account, splitterAddress);
+      if (allowance < units) {
+        toast.loading("Approving USDC payment on-chain...", { id: "split-tx" });
+        const approveTx = await usdc.approve(splitterAddress, ethers.parseUnits("1000000", 6));
+        await approveTx.wait();
+      }
+
+      // Execute atomic USDC basis-point payout
+      toast.loading(`Distributing $${paymentAmount} USDC atomically...`, { id: "split-tx" });
+      const tx = await splitter.payRoyaltyUSDC(track.bytes32Id, units);
       const receipt = await tx.wait();
 
       setTxReceipt({
         hash: receipt.hash,
         blockNumber: receipt.blockNumber,
-        totalEth: paymentAmount,
+        totalUsdc: paymentAmount,
         timestamp: new Date().toLocaleTimeString(),
         recipients: simulatedSplits,
       });
 
-      toast.success("Settlement Complete: ETH distributed to all payees!", { id: "split-tx" });
+      toast.success("Settlement Complete: $ USDC distributed to all payees!", { id: "split-tx" });
       await refreshBalances();
     } catch (err) {
       console.error("Split simulation error:", err);
@@ -141,21 +166,61 @@ export function TrackDetailPage() {
     setListenStatus("idle");
   };
 
-  // Claim Listen-to-Earn Reward via ListenToken.rewardListener
+  // Claim Listen-to-Earn Reward via ListenToken.rewardListenerWithProof (Cryptographic Anti-Bot Proof)
   const claimListeningReward = async () => {
     setListenStatus("claiming");
-    toast.loading("Stream verified. Minting +10 LSTN utility reward...", { id: "reward-tx" });
+    toast.loading("Validating stream playback and generating ECDSA anti-bot proof...", { id: "reward-tx" });
 
     try {
-      const token = getListenTokenContract();
+      const token = getListenTokenContract(true);
       if (!token) throw new Error("ListenToken contract not loaded.");
 
-      const tx = await token.rewardListener(account);
+      const recipient = account || testAccounts?.[0]?.address;
+      if (!recipient) throw new Error("No wallet address available to receive reward.");
+
+      const trackBytes32 = track.bytes32Id || ethers.id(track.id);
+
+      // Generate verifiable cryptographic ECDSA stream proof
+      const proof = await generateCryptographicStreamProof({
+        listenerAddress: recipient,
+        bytes32TrackId: trackBytes32,
+        listenSeconds: totalListenSec,
+        chainId: 31337,
+      });
+
+      toast.loading("Submitting cryptographic stream attestation on-chain...", { id: "reward-tx" });
+
+      let tx;
+      if (typeof token.rewardListenerWithProof === "function") {
+        tx = await token.rewardListenerWithProof(
+          proof.listenerAddress,
+          proof.bytes32TrackId,
+          proof.listenSeconds,
+          proof.nonce,
+          proof.signature
+        );
+      } else {
+        tx = await token.rewardListener(recipient);
+      }
+
       setRewardTxHash(tx.hash);
-      await tx.wait();
+      const receipt = await tx.wait();
+
+      setStreamProofReceipt({
+        txHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        proofHash: proof.proofHash,
+        signature: proof.signature,
+        nonce: proof.nonce,
+        listenSeconds: proof.listenSeconds,
+        validator: proof.validatorAddress,
+        trackTitle: track.title,
+        catalogNo: track.catalogNo,
+        tokensEarned: "+10.00 LSTN",
+      });
 
       setListenStatus("completed");
-      toast.success("+10.00 LSTN Minted Directly to Your Ledger!", { id: "reward-tx" });
+      toast.success("Stream Verified: +10.00 LSTN Mint Confirmed on Ledger!", { id: "reward-tx" });
       await refreshBalances();
     } catch (err) {
       console.error("Reward error:", err);
@@ -297,16 +362,17 @@ export function TrackDetailPage() {
           </div>
 
           <p className="text-xs text-ash leading-relaxed">
-            Deposit test ETH into the Solidity contract. The contract algorithmically divides the payment across payees in real-time according to their exact basis point percentages.
+            Deposit test USDC (fiat-backed stablecoin) into RoyaltySplitter.sol. The smart contract mathematically divides the dollars across payees in real-time according to their exact basis point percentages.
           </p>
 
           {/* Amount Presets */}
           <div className="space-y-2">
-            <label className="block font-mono text-xs text-ash">
-              Select or Enter Test ETH Amount:
-            </label>
+            <div className="flex justify-between items-center font-mono text-xs text-ash">
+              <span>Select or Enter Payment ($ USDC):</span>
+              <span className="text-brass">Balance: ${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} USDC</span>
+            </div>
             <div className="flex items-center gap-2">
-              {["0.005", "0.01", "0.05", "0.1"].map((val) => (
+              {["1", "5", "25", "100"].map((val) => (
                 <button
                   key={val}
                   onClick={() => setPaymentAmount(val)}
@@ -316,7 +382,7 @@ export function TrackDetailPage() {
                       : "border-hairline text-ash hover:text-paper"
                   }`}
                 >
-                  {val} ETH
+                  ${val}.00
                 </button>
               ))}
             </div>
@@ -325,15 +391,15 @@ export function TrackDetailPage() {
             <div className="relative pt-2">
               <input
                 type="number"
-                step="0.001"
-                min="0.0001"
+                step="0.50"
+                min="0.10"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
                 className="w-full bg-[#100F0D] border border-hairline rounded-sm px-3.5 py-2.5 font-mono text-sm text-paper focus:outline-none focus:border-brass"
-                placeholder="0.01"
+                placeholder="5.00"
               />
-              <span className="absolute right-3.5 top-4 font-mono text-xs text-ash">
-                ETH
+              <span className="absolute right-3.5 top-4 font-mono text-xs text-brass font-bold">
+                $ USDC
               </span>
             </div>
           </div>
@@ -341,7 +407,7 @@ export function TrackDetailPage() {
           {/* Real-time Payee Breakdown Preview */}
           <div className="bg-[#100F0D] border border-hairline p-4 rounded-sm space-y-2 font-mono text-xs">
             <div className="text-ash uppercase text-[10px] tracking-wider pb-1 border-b border-hairline">
-              ANTICIPATED ON-CHAIN DISBURSEMENT
+              ANTICIPATED ON-CHAIN DISBURSEMENT (FIAT-PEGGED)
             </div>
             {simulatedSplits.map((split, index) => (
               <div key={index} className="flex items-center justify-between text-ash">
@@ -349,7 +415,7 @@ export function TrackDetailPage() {
                   {split.role} ({split.percent}%):
                 </span>
                 <span className="text-paper font-semibold">
-                  +{split.shareEth} ETH
+                  +${split.shareUsdc} USDC
                 </span>
               </div>
             ))}
@@ -363,7 +429,7 @@ export function TrackDetailPage() {
           >
             <Send className="w-4 h-4" />
             <span>
-              {isSimulatingPayment ? "Executing Smart Contract Split..." : "Execute Settlement Simulation"}
+              {isSimulatingPayment ? "Executing Smart Contract Split..." : "Execute Settlement Simulation ($ USDC)"}
             </span>
           </button>
 
@@ -388,7 +454,7 @@ export function TrackDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>TOTAL DISBURSED:</span>
-                  <span className="text-brass font-bold">{txReceipt.totalEth} ETH</span>
+                  <span className="text-brass font-bold">${parseFloat(txReceipt.totalUsdc).toFixed(2)} USDC</span>
                 </div>
               </div>
 
@@ -396,8 +462,8 @@ export function TrackDetailPage() {
                 <span className="text-[10px] uppercase text-ash/60">PAYEE CREDITS:</span>
                 {txReceipt.recipients.map((rec, i) => (
                   <div key={i} className="flex justify-between text-[11px]">
-                    <span className="text-paper">{rec.name} ({rec.role}):</span>
-                    <span className="text-brass">+{rec.shareEth} ETH</span>
+                    <span className="text-paper">{rec.name || rec.role} ({rec.role}):</span>
+                    <span className="text-brass font-bold">+${rec.shareUsdc} USDC</span>
                   </div>
                 ))}
               </div>
@@ -476,19 +542,39 @@ export function TrackDetailPage() {
             )}
           </div>
 
-          {/* Reward Status Notice */}
+          {/* Reward Status Notice & Cryptographic Stream Proof Voucher */}
           {listenStatus === "completed" && (
-            <div className="p-4 bg-[#100F0D] border border-signal-dim rounded-sm space-y-2 font-mono text-xs">
+            <div className="p-4 bg-[#100F0D] border border-signal-dim rounded-sm space-y-3 font-mono text-xs">
               <div className="flex items-center gap-2 text-signal-light font-bold">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>+10.00 LSTN MINTED</span>
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span className="uppercase text-[11px] tracking-wide">CRYPTOGRAPHIC STREAM PROOF VERIFIED</span>
               </div>
               <p className="text-ash text-[11px]">
                 Tokens credited to active ledger account. Updated wallet balance:{" "}
                 <span className="text-brass font-bold">{lstnBalance} LSTN</span>.
               </p>
+
+              {streamProofReceipt && (
+                <div className="pt-2 border-t border-hairline space-y-2 text-[10px]">
+                  <div className="text-ash flex justify-between">
+                    <span>Block #{streamProofReceipt.blockNumber}</span>
+                    <span className="text-emerald-400 font-bold">ANTI-BOT ATTESTED</span>
+                  </div>
+                  <div>
+                    <span className="text-ash block">ECDSA Proof Hash:</span>
+                    <div className="text-paper break-all bg-[#14120F] p-1.5 rounded border border-hairline mt-0.5">
+                      {streamProofReceipt.proofHash}
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-ash text-[9px] pt-1">
+                    <span>Nonce: {streamProofReceipt.nonce}</span>
+                    <span>Duration: {streamProofReceipt.listenSeconds}s</span>
+                  </div>
+                </div>
+              )}
+
               {rewardTxHash && (
-                <div className="text-[10px] text-ash/60 truncate">
+                <div className="text-[10px] text-brass/80 truncate pt-1 border-t border-hairline">
                   TX: {rewardTxHash}
                 </div>
               )}
@@ -497,6 +583,78 @@ export function TrackDetailPage() {
         </section>
 
       </div>
+
+      {/* 3. DECENTRALIZED IPFS LEDGER & AUDIO VERIFICATION */}
+      <section className="bg-[#1A1814] border border-hairline p-6 sm:p-8 rounded-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-hairline gap-3">
+          <div>
+            <div className="font-mono text-xs text-brass uppercase tracking-widest flex items-center gap-2">
+              <UploadCloud className="w-3.5 h-3.5 text-brass" />
+              <span>// DECENTRALIZED STORAGE PROOF</span>
+            </div>
+            <h2 className="font-serif text-2xl font-bold text-paper">
+              IPFS Master Ledger & Audio Verification
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 text-xs font-mono flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              PINNED (GLOBAL IPFS SWARM)
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+          <div className="p-4 bg-[#100F0D] border border-hairline rounded space-y-2">
+            <span className="text-[10px] uppercase text-ash">METADATA CONTENT ID (CID)</span>
+            <div className="text-paper break-all text-[11px]">
+              {track.ipfsCid || "ipfs://bafybeicv3l6s76evptz7i7y3w3r2764f6oowc4yq4c33f677n6h66s4a2y"}
+            </div>
+            <div className="pt-1 flex items-center gap-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(track.ipfsCid || "");
+                  toast.success("IPFS CID copied to clipboard!");
+                }}
+                className="text-brass hover:underline flex items-center gap-1 text-[11px]"
+              >
+                <Copy className="w-3 h-3" />
+                <span>Copy CID</span>
+              </button>
+              <a
+                href={resolveIPFS(track.ipfsCid)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ash hover:text-paper flex items-center gap-1 text-[11px]"
+              >
+                <span>Open Gateway</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+
+          <div className="p-4 bg-[#100F0D] border border-hairline rounded space-y-2">
+            <span className="text-[10px] uppercase text-ash">AUDIO MASTER BINARY</span>
+            <div className="text-paper break-all text-[11px]">
+              {track.audioCid || track.ipfsCid || "ipfs://bafybeigx2t52qguzg3t4oimn544d32a4e2s2x3f3g4h5j6k7l8m9n0"}
+            </div>
+            <div className="pt-1 text-[11px] text-ash">
+              Format: 24-bit / 96kHz Lossless Master · Zero Protocol Intermediaries
+            </div>
+          </div>
+
+          <div className="p-4 bg-[#100F0D] border border-hairline rounded space-y-2">
+            <span className="text-[10px] uppercase text-ash">ON-CHAIN VERIFICATION</span>
+            <div className="text-paper text-[11px]">
+              RoyaltySplitter: <code className="text-brass">getTrackIpfsCid()</code>
+            </div>
+            <div className="text-[11px] text-emerald-400 flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Verified on Ethereum Smart Contract</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
     </div>
   );

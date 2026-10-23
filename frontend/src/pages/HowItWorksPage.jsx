@@ -86,17 +86,17 @@ export function HowItWorksPage() {
           <div className="p-3 bg-[#100F0D] border border-hairline">
             <div className="text-ash">Artist Share:</div>
             <div className="text-paper font-bold text-sm">5,000 BPS (50.0%)</div>
-            <div className="text-[10px] text-brass">0.0050 ETH / 0.01 ETH</div>
+            <div className="text-[10px] text-brass">$5.00 USDC / $10.00 USDC</div>
           </div>
           <div className="p-3 bg-[#100F0D] border border-hairline">
             <div className="text-ash">Producer Share:</div>
             <div className="text-paper font-bold text-sm">3,000 BPS (30.0%)</div>
-            <div className="text-[10px] text-brass">0.0030 ETH / 0.01 ETH</div>
+            <div className="text-[10px] text-brass">$3.00 USDC / $10.00 USDC</div>
           </div>
           <div className="p-3 bg-[#100F0D] border border-hairline">
             <div className="text-ash">Songwriter Share:</div>
             <div className="text-paper font-bold text-sm">2,000 BPS (20.0%)</div>
-            <div className="text-[10px] text-brass">0.0020 ETH / 0.01 ETH</div>
+            <div className="text-[10px] text-brass">$2.00 USDC / $10.00 USDC</div>
           </div>
         </div>
       </section>
@@ -124,7 +124,7 @@ export function HowItWorksPage() {
               <span className="text-ash">Financial Workstation</span>
             </div>
             <p className="text-xs text-ash leading-relaxed">
-              Designed like a master ledger and financial terminal. Displays live incoming royalty payment feeds, lifetime ETH earned readouts, track share percentage management tables, dense audit-ready payout histories, and administrative track registration.
+              Designed like a master ledger and financial terminal. Displays live incoming royalty payment feeds, lifetime USDC royalty earned readouts, track share percentage management tables, dense audit-ready payout histories, and administrative track registration.
             </p>
           </div>
         </div>

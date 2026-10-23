@@ -9,8 +9,10 @@ import {
   VolumeX,
   Disc,
   X,
+  ExternalLink,
 } from "lucide-react";
 import { useAudio } from "../context/AudioContext";
+import { resolveIPFS, formatCid } from "../utils/ipfs";
 
 export function AudioPlayerDock() {
   const {
@@ -113,9 +115,17 @@ export function AudioPlayerDock() {
             </div>
 
             <div className="flex flex-col text-left">
-              <span className="text-xs font-bold font-serif text-paper group-hover:text-brass transition-colors truncate max-w-[140px] sm:max-w-[180px]">
-                {currentTrack.title}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold font-serif text-paper group-hover:text-brass transition-colors truncate max-w-[140px] sm:max-w-[180px]">
+                  {currentTrack.title}
+                </span>
+                {currentTrack.ipfsCid && (
+                  <span className="hidden md:inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 rounded">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    IPFS
+                  </span>
+                )}
+              </div>
               <span className="text-[11px] font-mono text-ash truncate max-w-[140px] sm:max-w-[180px]">
                 {currentTrack.artist} · <span className="text-brass-dim">{currentTrack.catalogNo}</span>
               </span>
@@ -195,6 +205,20 @@ export function AudioPlayerDock() {
               className="w-16 h-1 bg-ink-subtle rounded appearance-none cursor-pointer accent-[#C9A24B]"
             />
           </div>
+
+          {currentTrack.ipfsCid && (
+            <a
+              href={resolveIPFS(currentTrack.ipfsCid)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono text-emerald-400 hover:text-emerald-300 border border-emerald-900/50 hover:border-emerald-700/70 bg-emerald-950/30 rounded-sm transition-colors"
+              title={`View decentralized master on IPFS (${currentTrack.ipfsCid})`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>{formatCid(currentTrack.ipfsCid, 7, 5)}</span>
+              <ExternalLink className="w-3 h-3 opacity-70" />
+            </a>
+          )}
 
           <Link
             to={`/track/${currentTrack.id}`}

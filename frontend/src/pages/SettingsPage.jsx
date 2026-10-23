@@ -9,6 +9,7 @@ export function SettingsPage() {
     account,
     chainId,
     ethBalance,
+    usdcBalance,
     lstnBalance,
     userRole,
     setUserRole,
@@ -67,13 +68,18 @@ export function SettingsPage() {
           </div>
 
           <div className="flex justify-between py-1 border-t border-hairline">
-            <span className="text-ash">ETH Balance:</span>
-            <span className="text-paper font-bold">{formatEtherBalance(ethBalance, 4)} ETH</span>
+            <span className="text-ash">USDC Royalty Balance:</span>
+            <span className="text-paper font-bold">${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} USDC</span>
           </div>
 
           <div className="flex justify-between py-1 border-t border-hairline">
             <span className="text-ash">LSTN Tokens:</span>
             <span className="text-brass font-bold">{lstnBalance} LSTN</span>
+          </div>
+
+          <div className="flex justify-between py-1 border-t border-hairline">
+            <span className="text-ash">Gas Liquidity (ETH):</span>
+            <span className="text-ash">{formatEtherBalance(ethBalance, 4)} ETH</span>
           </div>
 
           <div className="flex justify-between py-1 border-t border-hairline">

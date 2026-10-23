@@ -3,14 +3,15 @@ import { Link } from "react-router-dom";
 import { StudioDisc3D } from "../components/StudioDisc3D";
 import { LiveLedgerStrip } from "../components/LiveLedgerStrip";
 import { StackedSplitBar } from "../components/StackedSplitBar";
-import { DEMO_TRACKS } from "../data/demoTracks";
+import { getAllTracks } from "../data/demoTracks";
 import { ArrowRight, Play, Disc3, Shield, Activity } from "lucide-react";
 
 export function HomePage() {
   const [hoveredTrackId, setHoveredTrackId] = useState(null);
 
-  const featuredTrack = DEMO_TRACKS[0];
-  const secondaryTracks = DEMO_TRACKS.slice(1);
+  const allTracks = getAllTracks();
+  const featuredTrack = allTracks[0];
+  const secondaryTracks = allTracks.slice(1, 4);
 
   return (
     <div className="space-y-16 pb-20">

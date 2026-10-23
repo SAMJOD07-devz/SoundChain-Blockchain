@@ -25,29 +25,30 @@ import {
   Cell,
 } from "recharts";
 import { Badge } from "../components/UI/Badge";
-import { DEMO_TRACKS } from "../data/demoTracks";
+import { getAllTracks } from "../data/demoTracks";
 import { useWallet } from "../context/WalletContext";
 import { formatEth } from "../utils/ethereum";
 
 export function AnalyticsPage() {
   const { isLocalhost, isSepolia } = useWallet();
   const [timeRange, setTimeRange] = useState("30D");
+  const allTracks = getAllTracks();
 
   // Protocol Macro Financial Metrics
   const macroStats = [
     {
       label: "Total Royalty Volume Settled",
-      value: "148.85 ETH",
-      subValue: "~$512,420 USD",
+      value: "$148,850.00 USDC",
+      subValue: "100% Fiat-Backed Real USD",
       change: "+18.4%",
       isPositive: true,
       color: "text-emerald-400",
     },
     {
       label: "Active Asset Portfolio",
-      value: "3 IP Assets",
+      value: `${allTracks.length} IP Assets`,
       subValue: "100% On-Chain Cap Tables",
-      change: "Seeded",
+      change: "Active",
       isPositive: true,
       color: "text-amber-400",
     },
@@ -62,14 +63,14 @@ export function AnalyticsPage() {
     {
       label: "Listen-to-Earn Rewards Distributed",
       value: "24,850 LSTN",
-      subValue: "Cap: 1,000,000 LSTN",
+      subValue: "Stream Incentive Utility",
       change: "+12.2%",
       isPositive: true,
       color: "text-amber-400",
     },
   ];
 
-  // Historical Settlement Volume Data (Recharts)
+  // Historical Settlement Volume Data (Recharts in $1,000s)
   const volumeData = [
     { date: "Day 1", volume: 4.2, lstn: 420 },
     { date: "Day 5", volume: 8.6, lstn: 860 },
@@ -82,42 +83,42 @@ export function AnalyticsPage() {
 
   // Distribution by Stakeholder Role
   const roleDistribution = [
-    { role: "Artists (Primary Creators)", share: 55, volume: "81.86 ETH", color: "#00f59b" },
-    { role: "Producers (Sound Engineering)", share: 27, volume: "40.18 ETH", color: "#fbbf24" },
-    { role: "Songwriters (Publishing)", share: 18, volume: "26.81 ETH", color: "#e2e8f0" },
+    { role: "Artists (Primary Creators)", share: 55, volume: "$81,860 USDC", color: "#00f59b" },
+    { role: "Producers (Sound Engineering)", share: 27, volume: "$40,180 USDC", color: "#fbbf24" },
+    { role: "Songwriters (Publishing)", share: 18, volume: "$26,810 USDC", color: "#e2e8f0" },
   ];
 
   // Recent On-Chain Settlement Ledger
   const recentSettlements = [
     {
       txHash: "0x8f2a...4b19",
-      asset: "Midnight Signals",
-      amount: "0.1000 ETH",
-      payees: "3 Stakeholders",
+      asset: allTracks[0]?.title || "Saumya - French Intro",
+      amount: "$100.00 USDC",
+      payees: `${allTracks[0]?.splits?.length || 2} Stakeholders`,
       time: "2 mins ago",
       status: "Settled (Block 19284)",
     },
     {
       txHash: "0x3c9e...7a22",
-      asset: "Glass Horizon",
-      amount: "0.0500 ETH",
-      payees: "3 Stakeholders",
+      asset: allTracks[1]?.title || "Midnight Signals",
+      amount: "$50.00 USDC",
+      payees: `${allTracks[1]?.splits?.length || 3} Stakeholders`,
       time: "8 mins ago",
       status: "Settled (Block 19281)",
     },
     {
       txHash: "0x1d4f...9c83",
-      asset: "Afterglow Circuit",
-      amount: "0.2500 ETH",
-      payees: "3 Stakeholders",
+      asset: allTracks[2]?.title || "Glass Horizon",
+      amount: "$250.00 USDC",
+      payees: `${allTracks[2]?.splits?.length || 3} Stakeholders`,
       time: "14 mins ago",
       status: "Settled (Block 19276)",
     },
     {
       txHash: "0x6a1b...2e44",
-      asset: "Midnight Signals",
-      amount: "0.0100 ETH",
-      payees: "3 Stakeholders",
+      asset: allTracks[0]?.title || "Saumya - French Intro",
+      amount: "$10.00 USDC",
+      payees: `${allTracks[0]?.splits?.length || 2} Stakeholders`,
       time: "26 mins ago",
       status: "Settled (Block 19270)",
     },
@@ -136,7 +137,7 @@ export function AnalyticsPage() {
             Settlement Analytics
           </h1>
           <p className="text-sm text-slate-400 max-w-2xl font-normal">
-            Real-time on-chain financial metrics, cumulative ETH royalty liquidity distributions, and stakeholder cap table accounting.
+            Real-time on-chain financial metrics, cumulative USDC royalty liquidity distributions, and stakeholder cap table accounting.
           </p>
         </div>
 
@@ -184,14 +185,14 @@ export function AnalyticsPage() {
               Settlement Inflow Curve
             </div>
             <h3 className="text-xl font-bold text-white font-heading mt-0.5">
-              Cumulative ETH Royalty Payouts
+              Cumulative USDC Royalty Settlements
             </h3>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-mono">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-              <span className="text-slate-300">ETH Volume</span>
+              <span className="text-slate-300">USDC Volume ($)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
@@ -228,7 +229,7 @@ export function AnalyticsPage() {
                 strokeWidth={2.5}
                 fillOpacity={1}
                 fill="url(#ethGrad)"
-                name="ETH Settled"
+                name="USDC Settled ($k)"
               />
             </AreaChart>
           </ResponsiveContainer>

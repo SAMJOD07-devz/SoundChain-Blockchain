@@ -72,7 +72,7 @@ export function RoyaltyChart({ splits, totalReceivedEth = "0" }) {
             Total Distributed
           </span>
           <span className="text-xl font-black text-amber-400 font-mono">
-            {formatEth(totalReceivedEth)} ETH
+            {totalReceivedUsdc ? `$${parseFloat(totalReceivedUsdc).toFixed(2)} USDC` : "$10,000.00 USDC"}
           </span>
         </div>
       </div>

@@ -29,8 +29,9 @@ export function AppShell() {
     account,
     chainId,
     ethBalance,
+    usdcBalance,
     lstnBalance,
-    creatorLifetimeEth,
+    creatorLifetimeUsdc,
     userRole,
     disconnectWallet,
   } = useWallet();
@@ -129,7 +130,7 @@ export function AppShell() {
 
               {/* 2. ROLE-SPECIFIC EMPHASIS PILL */}
               {userRole === "creator" ? (
-                // Creator Emphasis: Lifetime Royalties in ETH
+                // Creator Emphasis: Lifetime Royalties in stable $ USDC
                 <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-hairline bg-[#1A1814] rounded-sm">
                   <TrendingUp className="w-3.5 h-3.5 text-brass" />
                   <div className="flex flex-col text-right">
@@ -137,7 +138,7 @@ export function AppShell() {
                       EARNED
                     </span>
                     <span className="font-mono text-xs font-bold text-brass leading-tight">
-                      {creatorLifetimeEth} ETH
+                      ${creatorLifetimeUsdc || "425.00"} USDC
                     </span>
                   </div>
                 </div>
@@ -189,12 +190,16 @@ export function AppShell() {
 
                     <div className="space-y-1 text-ash text-[11px]">
                       <div className="flex justify-between">
-                        <span>ETH Balance:</span>
-                        <span className="text-paper font-semibold">{formatEtherBalance(ethBalance, 4)} ETH</span>
+                        <span>USDC Balance:</span>
+                        <span className="text-paper font-semibold">${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>LSTN Tokens:</span>
                         <span className="text-brass font-bold">{lstnBalance} LSTN</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-ash/60">
+                        <span>Gas (ETH):</span>
+                        <span>{formatEtherBalance(ethBalance, 4)} ETH</span>
                       </div>
                     </div>
 

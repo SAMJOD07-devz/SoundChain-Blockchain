@@ -13,6 +13,7 @@ import { HomePage } from "./pages/HomePage";
 import { TracksPage } from "./pages/TracksPage";
 import { TrackDetailPage } from "./pages/TrackDetailPage";
 import { HowItWorksPage } from "./pages/HowItWorksPage";
+import { AnalyticsPage } from "./pages/AnalyticsPage";
 
 // Listener Interface Pages
 import { ListenerHomePage } from "./pages/listener/ListenerHomePage";
@@ -87,6 +88,14 @@ export default function App() {
               element={
                 <PublicLayout>
                   <HowItWorksPage />
+                </PublicLayout>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <PublicLayout>
+                  <AnalyticsPage />
                 </PublicLayout>
               }
             />

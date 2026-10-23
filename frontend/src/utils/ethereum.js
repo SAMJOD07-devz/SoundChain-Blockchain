@@ -73,6 +73,11 @@ export function parseEtherError(error) {
     return "Please switch your wallet to Sepolia Testnet or Local Hardhat network.";
   }
 
+  // Handle connection / RPC fetch failure
+  if (error.message && error.message.toLowerCase().includes("failed to fetch")) {
+    return "Unable to reach local blockchain node. Please ensure 'npx hardhat node' is running.";
+  }
+
   // Custom contract reverts
   if (error.reason) {
     return `Smart Contract Revert: ${error.reason}`;

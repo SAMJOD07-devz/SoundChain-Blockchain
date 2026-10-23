@@ -44,6 +44,7 @@ export function WalletProvider({ children }) {
   const [account, setAccount] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [ethBalance, setEthBalance] = useState("0");
+  const [usdcBalance, setUsdcBalance] = useState("0");
   const [lstnBalance, setLstnBalance] = useState("0");
   const [totalListens, setTotalListens] = useState(0);
   const [status, setStatus] = useState("disconnected"); // 'disconnected' | 'connecting' | 'connected' | 'wrong_network'
@@ -94,16 +95,44 @@ export function WalletProvider({ children }) {
     return id === CHAIN_CONFIG.SEPOLIA.chainIdDec || id === CHAIN_CONFIG.HARDHAT.chainIdDec;
   }, []);
 
+  // Refs to avoid infinite dependency cycles
+  const accountRef = React.useRef(account);
+  accountRef.current = account;
+  const providerRef = React.useRef(provider);
+  providerRef.current = provider;
+  const chainIdRef = React.useRef(chainId);
+  chainIdRef.current = chainId;
+  const isTestModeRef = React.useRef(isTestWalletMode);
+  isTestModeRef.current = isTestWalletMode;
+  const testIndexRef = React.useRef(currentTestAccountIndex);
+  testIndexRef.current = currentTestAccountIndex;
+
   // Fetch balances and contract data for connected account
   const refreshBalances = useCallback(async (currentAccount, currentProvider, currentChainId) => {
-    const acc = currentAccount || account;
-    const prov = currentProvider || provider;
+    const acc = currentAccount || accountRef.current;
+    const prov = currentProvider || providerRef.current;
     if (!acc || !prov) return;
 
     try {
       const ethBal = await prov.getBalance(acc);
       setEthBalance(ethBal.toString());
 
+      // Fetch Stablecoin USDC Balance
+      if (contractsData?.MockUSDC?.address) {
+        try {
+          const usdcContract = new ethers.Contract(
+            contractsData.MockUSDC.address,
+            contractsData.MockUSDC.abi,
+            prov
+          );
+          const uBal = await usdcContract.balanceOf(acc);
+          setUsdcBalance(ethers.formatUnits(uBal, 6));
+        } catch (usdcErr) {
+          console.warn("Could not fetch MockUSDC balance:", usdcErr);
+        }
+      }
+
+      // Fetch Platform Reward Token LSTN Balance
       if (contractsData?.ListenToken?.address) {
         try {
           const tokenContract = new ethers.Contract(
@@ -123,14 +152,20 @@ export function WalletProvider({ children }) {
     } catch (err) {
       console.error("Error refreshing wallet balances:", err);
     }
-  }, [account, provider]);
+  }, []);
+
+  // Helper to get local RPC URL
+  const getLocalRpcUrl = () => {
+    return "http://127.0.0.1:8545";
+  };
 
   // Connect Local Hardhat Test Wallet Directly (No MetaMask required)
   const connectTestWallet = useCallback(async (accountIndex = 0) => {
     setStatus("connecting");
     try {
       const testAcc = HARDHAT_TEST_ACCOUNTS[accountIndex];
-      const rpcProvider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+      const rpcUrl = getLocalRpcUrl();
+      const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
       const testSigner = new ethers.Wallet(testAcc.privateKey, rpcProvider);
 
       setProvider(rpcProvider);
@@ -301,38 +336,73 @@ export function WalletProvider({ children }) {
         window.ethereum.removeListener("chainChanged", handleChainChanged);
       }
     };
-  }, [provider, chainId, isSupportedChain, refreshBalances, isTestWalletMode, account]);
+  }, [isSupportedChain]);
 
   // Auto-connect Test Wallet on initial mount if running locally
   useEffect(() => {
-    // Automatically connect Account #0 on localhost for seamless zero-config testing
     connectTestWallet(0).catch(() => {
-      console.log("Local node not responding yet, ready to connect on demand.");
+      console.log("Local node ready on demand.");
     });
-  }, [connectTestWallet]);
+  }, []);
 
   // Instantiate Smart Contracts
-  const getRoyaltySplitterContract = useCallback(() => {
+  const getRoyaltySplitterContract = useCallback((asAdmin = false) => {
     if (!contractsData?.RoyaltySplitter?.address) return null;
-    const runner = signer || provider;
+    let runner = signer || provider;
+
+    // Use direct local RPC proxy with test wallet credentials when on test mode or asAdmin
+    if ((asAdmin || isTestWalletMode) && HARDHAT_TEST_ACCOUNTS[0]) {
+      const rpcUrl = getLocalRpcUrl();
+      const adminProvider = new ethers.JsonRpcProvider(rpcUrl);
+      const accIndex = asAdmin ? 0 : currentTestAccountIndex;
+      runner = new ethers.Wallet(HARDHAT_TEST_ACCOUNTS[accIndex].privateKey, adminProvider);
+    }
+
     if (!runner) return null;
     return new ethers.Contract(
       contractsData.RoyaltySplitter.address,
       contractsData.RoyaltySplitter.abi,
       runner
     );
-  }, [signer, provider]);
+  }, [signer, provider, isTestWalletMode, currentTestAccountIndex]);
 
-  const getListenTokenContract = useCallback(() => {
+  const getListenTokenContract = useCallback((asAdmin = false) => {
     if (!contractsData?.ListenToken?.address) return null;
-    const runner = signer || provider;
+    let runner = signer || provider;
+
+    if ((asAdmin || isTestWalletMode) && HARDHAT_TEST_ACCOUNTS[0]) {
+      const rpcUrl = getLocalRpcUrl();
+      const adminProvider = new ethers.JsonRpcProvider(rpcUrl);
+      const accIndex = asAdmin ? 0 : currentTestAccountIndex;
+      runner = new ethers.Wallet(HARDHAT_TEST_ACCOUNTS[accIndex].privateKey, adminProvider);
+    }
+
     if (!runner) return null;
     return new ethers.Contract(
       contractsData.ListenToken.address,
       contractsData.ListenToken.abi,
       runner
     );
-  }, [signer, provider]);
+  }, [signer, provider, isTestWalletMode, currentTestAccountIndex]);
+
+  const getMockUsdcContract = useCallback((asAdmin = false) => {
+    if (!contractsData?.MockUSDC?.address) return null;
+    let runner = signer || provider;
+
+    if ((asAdmin || isTestWalletMode) && HARDHAT_TEST_ACCOUNTS[0]) {
+      const rpcUrl = getLocalRpcUrl();
+      const adminProvider = new ethers.JsonRpcProvider(rpcUrl);
+      const accIndex = asAdmin ? 0 : currentTestAccountIndex;
+      runner = new ethers.Wallet(HARDHAT_TEST_ACCOUNTS[accIndex].privateKey, adminProvider);
+    }
+
+    if (!runner) return null;
+    return new ethers.Contract(
+      contractsData.MockUSDC.address,
+      contractsData.MockUSDC.abi,
+      runner
+    );
+  }, [signer, provider, isTestWalletMode, currentTestAccountIndex]);
 
   return (
     <WalletContext.Provider
@@ -340,6 +410,7 @@ export function WalletProvider({ children }) {
         account,
         chainId,
         ethBalance,
+        usdcBalance,
         lstnBalance,
         totalListens,
         status,
@@ -358,6 +429,7 @@ export function WalletProvider({ children }) {
         isCreatorPayee,
         isAdmin,
         creatorLifetimeEth: isCreatorPayee ? "0.0425" : "0.0150",
+        creatorLifetimeUsdc: isCreatorPayee ? "425.00" : "150.00",
         connectWallet,
         connectTestWallet,
         disconnectWallet,
@@ -366,6 +438,7 @@ export function WalletProvider({ children }) {
         refreshBalances: () => refreshBalances(account, provider, chainId),
         getRoyaltySplitterContract,
         getListenTokenContract,
+        getMockUsdcContract,
       }}
     >
       {children}

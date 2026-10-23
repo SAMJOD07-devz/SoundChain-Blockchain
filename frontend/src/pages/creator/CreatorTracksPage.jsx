@@ -1,52 +1,32 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useWallet } from "../../context/WalletContext";
-import { DEMO_TRACKS } from "../../data/demoTracks";
+import { getAllTracks } from "../../data/demoTracks";
+import { formatCid } from "../../utils/ipfs";
 import { StackedSplitBar } from "../../components/StackedSplitBar";
 import { ArrowRight, Settings, ExternalLink, Plus } from "lucide-react";
 
 export function CreatorTracksPage() {
   const { account } = useWallet();
+  const allTracks = getAllTracks();
 
-  // Simulated management data for creator's tracks
-  const tracksData = [
-    {
-      id: DEMO_TRACKS[0].id,
-      title: DEMO_TRACKS[0].title,
-      catalogNo: DEMO_TRACKS[0].catalogNo,
+  // Management data for creator's tracks
+  const tracksData = allTracks.map((t, idx) => {
+    const artistSplit = t.splits?.find((s) => s.role === "Artist") || t.splits?.[0] || { percent: 50, bps: 5000 };
+    return {
+      id: t.id,
+      title: t.title,
+      catalogNo: t.catalogNo,
       role: "Primary Artist",
-      sharePercent: 50,
-      shareBps: 5000,
-      totalGross: "0.420 ETH",
-      creatorNet: "0.210 ETH",
-      lastPayout: "14 mins ago",
-      splits: DEMO_TRACKS[0].splits,
-    },
-    {
-      id: DEMO_TRACKS[1].id,
-      title: DEMO_TRACKS[1].title,
-      catalogNo: DEMO_TRACKS[1].catalogNo,
-      role: "Primary Artist",
-      sharePercent: 60,
-      shareBps: 6000,
-      totalGross: "0.280 ETH",
-      creatorNet: "0.168 ETH",
-      lastPayout: "2 hours ago",
-      splits: DEMO_TRACKS[1].splits,
-    },
-    {
-      id: DEMO_TRACKS[2].id,
-      title: DEMO_TRACKS[2].title,
-      catalogNo: DEMO_TRACKS[2].catalogNo,
-      role: "Primary Artist",
-      sharePercent: 55,
-      shareBps: 5500,
-      totalGross: "0.150 ETH",
-      creatorNet: "0.082 ETH",
-      lastPayout: "Yesterday",
-      splits: DEMO_TRACKS[2].splits,
-    },
-  ];
+      sharePercent: artistSplit.percent,
+      shareBps: artistSplit.bps || Math.round(artistSplit.percent * 100),
+      totalGross: idx === 0 ? "$420.00 USDC" : idx === 1 ? "$280.00 USDC" : idx === 2 ? "$150.00 USDC" : "$0.00 USDC",
+      creatorNet: idx === 0 ? "$210.00 USDC" : idx === 1 ? "$168.00 USDC" : idx === 2 ? "$82.50 USDC" : "$0.00 USDC",
+      lastPayout: idx === 0 ? "14 mins ago" : idx === 1 ? "2 hours ago" : idx === 2 ? "Yesterday" : "Recently Registered",
+      splits: t.splits,
+      ipfsCid: t.ipfsCid,
+    };
+  });
 
   return (
     <div className="space-y-10 py-8 pb-28 max-w-6xl mx-auto font-mono text-xs">
@@ -93,10 +73,20 @@ export function CreatorTracksPage() {
               {tracksData.map((item) => (
                 <tr key={item.id} className="hover:bg-[#100F0D] transition-colors">
                   <td className="py-4 px-4">
-                    <span className="font-serif text-sm font-bold text-paper block">
-                      {item.title}
+                    <div className="flex items-center gap-2">
+                      <span className="font-serif text-sm font-bold text-paper">
+                        {item.title}
+                      </span>
+                      {item.ipfsCid && (
+                        <span className="px-1.5 py-0.2 bg-emerald-950/70 text-emerald-400 border border-emerald-800/40 rounded text-[9px] flex items-center gap-1">
+                          <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
+                          IPFS
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-ash">
+                      {item.ipfsCid ? `CID: ${formatCid(item.ipfsCid, 6, 4)}` : "Solidity 0.8.20"}
                     </span>
-                    <span className="text-[10px] text-ash">Solidity 0.8.20</span>
                   </td>
                   <td className="py-4 px-4 text-ash">
                     <span className="text-paper">{item.catalogNo}</span>
@@ -131,7 +121,7 @@ export function CreatorTracksPage() {
         </div>
 
         <div className="p-4 bg-[#100F0D] border-t border-hairline flex items-center justify-between text-ash text-[11px]">
-          <span>Total Participating Tracks: 3 Masters</span>
+          <span>Total Participating Tracks: {tracksData.length} Masters</span>
           <span>All payouts settled directly via RoyaltySplitter.sol</span>
         </div>
       </div>

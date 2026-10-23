@@ -4,12 +4,14 @@ import { formatEtherBalance, parseEtherError } from "../utils/ethereum";
 import { ethers } from "ethers";
 import toast from "react-hot-toast";
 import { Copy, Check, RefreshCw, Send, ArrowRight } from "lucide-react";
-import { DEMO_TRACKS } from "../data/demoTracks";
+import { getAllTracks } from "../data/demoTracks";
 
 export function PortfolioPage() {
+  const allTracks = getAllTracks();
   const {
     account,
     ethBalance,
+    usdcBalance,
     lstnBalance,
     totalListens,
     isTestWalletMode,
@@ -145,16 +147,23 @@ export function PortfolioPage() {
         <div className="divide-y divide-hairline font-mono text-xs">
           
           <div className="px-6 py-4 flex items-center justify-between">
-            <span className="text-ash">Liquid Ethereum Balance</span>
+            <span className="text-ash">Asset-Backed Royalty Balance ($ USDC)</span>
             <span className="text-paper font-semibold text-sm">
-              {formatEtherBalance(ethBalance, 4)} ETH
+              ${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} USDC
             </span>
           </div>
 
           <div className="px-6 py-4 flex items-center justify-between">
-            <span className="text-ash">SoundChain Utility Tokens (LSTN)</span>
+            <span className="text-ash">SoundChain Loyalty Rewards (LSTN)</span>
             <span className="text-brass font-bold text-sm">
               {lstnBalance} LSTN
+            </span>
+          </div>
+
+          <div className="px-6 py-4 flex items-center justify-between">
+            <span className="text-ash">EVM Gas Liquidity (ETH)</span>
+            <span className="text-ash font-medium text-xs">
+              {formatEtherBalance(ethBalance, 4)} ETH
             </span>
           </div>
 
@@ -249,19 +258,26 @@ export function PortfolioPage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-hairline pb-2 font-mono text-xs">
           <span className="uppercase text-ash">REGISTERED TRACK ENTITLEMENTS</span>
-          <span className="text-ash">3 Seed Records</span>
+          <span className="text-ash">{allTracks.length} Active Records</span>
         </div>
 
         <div className="border border-hairline rounded-sm overflow-hidden divide-y divide-hairline bg-[#1A1814] font-mono text-xs">
-          {DEMO_TRACKS.map((t, idx) => (
+          {allTracks.map((t, idx) => (
             <div key={idx} className="p-4 flex items-center justify-between hover:bg-[#100F0D] transition-colors">
               <div className="space-y-0.5">
-                <div className="font-serif text-sm font-bold text-paper">{t.title}</div>
+                <div className="font-serif text-sm font-bold text-paper flex items-center gap-2">
+                  <span>{t.title}</span>
+                  {t.ipfsCid && (
+                    <span className="px-1.5 py-0.2 bg-emerald-950/70 text-emerald-400 border border-emerald-800/40 rounded text-[9px]">
+                      IPFS
+                    </span>
+                  )}
+                </div>
                 <div className="text-[11px] text-ash">{t.artist} · {t.catalogNo}</div>
               </div>
               <div className="text-right">
-                <div className="text-brass font-bold">{t.splits[0].percent}% Primary Split</div>
-                <div className="text-[11px] text-ash">{t.splits[0].bps} BPS</div>
+                <div className="text-brass font-bold">{t.splits?.[0]?.percent || 50}% Primary Split</div>
+                <div className="text-[11px] text-ash">{t.splits?.[0]?.bps || 5000} BPS</div>
               </div>
             </div>
           ))}

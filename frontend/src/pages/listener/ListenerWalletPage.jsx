@@ -10,6 +10,7 @@ export function ListenerWalletPage() {
   const {
     account,
     ethBalance,
+    usdcBalance,
     lstnBalance,
     totalListens,
     refreshBalances,
@@ -125,11 +126,15 @@ export function ListenerWalletPage() {
               <span className="text-paper font-bold">{totalListens} Plays</span>
             </div>
             <div className="flex justify-between gap-6">
-              <span className="text-ash">Gas / Network ETH:</span>
-              <span className="text-paper">{formatEtherBalance(ethBalance, 4)} ETH</span>
+              <span className="text-ash">Stable USDC:</span>
+              <span className="text-brass font-bold">${parseFloat(usdcBalance || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} USDC</span>
             </div>
             <div className="flex justify-between gap-6">
-              <span className="text-ash">Reward Tier:</span>
+              <span className="text-ash">Gas / Network ETH:</span>
+              <span className="text-ash">{formatEtherBalance(ethBalance, 4)} ETH</span>
+            </div>
+            <div className="flex justify-between gap-6">
+              <span className="text-ash">Stream Incentive:</span>
               <span className="text-signal-light font-semibold">+10 LSTN / Stream</span>
             </div>
           </div>

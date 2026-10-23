@@ -39,9 +39,17 @@ export function TrackCard({ track, onQuickTip }) {
           >
             {/* Top Bar on Artwork */}
             <div className="flex justify-between items-start">
-              <span className="px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-[11px] font-bold text-white border border-emerald-500/30 shadow-sm font-mono">
-                {track.genre}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-[11px] font-bold text-white border border-emerald-500/30 shadow-sm font-mono">
+                  {track.genre}
+                </span>
+                {track.ipfsCid && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 text-[9px] font-mono flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-emerald-400"></span>
+                    IPFS
+                  </span>
+                )}
+              </div>
 
               <span className="px-2 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-mono text-emerald-300 border border-emerald-500/20">
                 {track.bpm} BPM
@@ -122,7 +130,7 @@ export function TrackCard({ track, onQuickTip }) {
           className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-300 hover:text-black border border-emerald-500/30 text-xs font-bold font-mono transition-all shadow-sm flex items-center gap-1.5"
         >
           <Send className="w-3 h-3" />
-          <span>Split ETH</span>
+          <span>Split $ USDC</span>
         </Link>
       </div>
 

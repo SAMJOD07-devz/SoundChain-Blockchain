@@ -1,16 +1,20 @@
 import React from "react";
-
-const INITIAL_LEDGER_ENTRIES = [
-  { type: "SPLIT", amount: "0.010 ETH", track: "Midnight Signals", payees: "3 Payees (50 / 30 / 20%)", hash: "0x8827...2cc0", time: "2m ago" },
-  { type: "MINT", amount: "+10.00 LSTN", track: "Reward Payout", payees: "Listener 0xf39F...2266", hash: "0x1b4a...9f12", time: "5m ago" },
-  { type: "SPLIT", amount: "0.025 ETH", track: "Glass Horizon", payees: "3 Payees (60 / 25 / 15%)", hash: "0x4a78...14c3", time: "11m ago" },
-  { type: "MINT", amount: "+10.00 LSTN", track: "Reward Payout", payees: "Listener 0x7099...79C8", hash: "0x9c32...e704", time: "18m ago" },
-  { type: "SPLIT", amount: "0.015 ETH", track: "Afterglow Circuit", payees: "3 Payees (50 / 30 / 20%)", hash: "0xfeeb...7e1c", time: "24m ago" },
-];
+import { getAllTracks } from "../data/demoTracks";
 
 export function LiveLedgerStrip() {
+  const allTracks = getAllTracks();
+  
+  const dynamicEntries = allTracks.map((t, idx) => ({
+    type: idx % 2 === 0 ? "SPLIT" : "MINT",
+    amount: idx % 2 === 0 ? `$${(idx + 1) * 15}.00 USDC` : "+10.00 LSTN",
+    track: t.title,
+    payees: `${t.splits?.length || 3} Payees (${t.splits?.map(s => `${s.percent}%`).join(' / ') || '50 / 30 / 20%'})`,
+    hash: t.txHash ? `${t.txHash.slice(0, 6)}...${t.txHash.slice(-4)}` : (t.bytes32Id ? `${t.bytes32Id.slice(0, 6)}...${t.bytes32Id.slice(-4)}` : "0x8827...2cc0"),
+    time: idx === 0 ? "Just now" : `${idx * 4}m ago`,
+  }));
+
   // Duplicate list to create a seamless infinite scroll loop
-  const entries = [...INITIAL_LEDGER_ENTRIES, ...INITIAL_LEDGER_ENTRIES];
+  const entries = [...dynamicEntries, ...dynamicEntries];
 
   return (
     <div className="w-full border-y border-hairline bg-[#0E0D0B] overflow-hidden select-none py-2.5">

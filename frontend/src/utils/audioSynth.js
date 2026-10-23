@@ -1,8 +1,4 @@
-/**
- * Web Audio API Procedural Synthesizer for SoundChain
- * Provides authentic, lightweight procedural synth audio loops tailored for each demo track genre.
- * Includes FFT AnalyserNode hookup for live audio waveform & spectrum visualizer components.
- */
+import { resolveIPFS } from "./ipfs";
 
 class AudioSynthEngine {
   constructor() {
@@ -14,6 +10,9 @@ class AudioSynthEngine {
     this.intervalId = null;
     this.step = 0;
     this.activeNodes = [];
+    this.audioEl = null;
+    this.mediaSourceNode = null;
+    this.isStreamingRealAudio = false;
   }
 
   init() {
@@ -41,8 +40,15 @@ class AudioSynthEngine {
     return this.analyser;
   }
 
-  playTrack(trackId) {
+  /**
+   * Plays a track using either an IPFS/binary audio stream or procedural analog synthesis
+   * @param {object|string} track Track object or trackId string
+   */
+  playTrack(track) {
     this.init();
+    const trackId = typeof track === "object" ? track.id : track;
+    const audioSource = typeof track === "object" ? (track.audioUrl || track.localBlobUrl || track.audioCid) : null;
+
     if (this.isPlaying && this.currentTrackId === trackId) return;
     this.stop();
 
@@ -50,16 +56,60 @@ class AudioSynthEngine {
     this.currentTrackId = trackId;
     this.step = 0;
 
+    // 1. If track has an IPFS or real audio binary source, stream it through Web Audio API
+    if (audioSource) {
+      const resolvedUrl = resolveIPFS(audioSource);
+      if (resolvedUrl) {
+        try {
+          this.playAudioBinary(resolvedUrl, trackId);
+          return;
+        } catch (err) {
+          console.warn("Could not stream audio binary, falling back to procedural synth:", err);
+        }
+      }
+    }
+
+    // 2. Procedural Analogue Synthesis fallback
+    this.isStreamingRealAudio = false;
     if (trackId === "track-1") {
-      // Midnight Signals — Synthwave (120 BPM)
       this.startSynthwaveLoop();
     } else if (trackId === "track-2") {
-      // Glass Horizon — Ambient Chill (95 BPM)
       this.startAmbientLoop();
     } else {
-      // Afterglow Circuit — Electro Cyber (128 BPM)
-      this.startCyberLoop();
+      this.startElectroLoop();
     }
+  }
+
+  /**
+   * Streams audio binary from IPFS / Blob and routes into Web Audio Analyser
+   */
+  playAudioBinary(url, trackId) {
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.src = "";
+    }
+
+    const audio = new Audio();
+    audio.crossOrigin = "anonymous";
+    audio.src = url;
+    audio.loop = true;
+    this.audioEl = audio;
+    this.isStreamingRealAudio = true;
+
+    try {
+      if (!this.mediaSourceNode) {
+        this.mediaSourceNode = this.ctx.createMediaElementSource(audio);
+        this.mediaSourceNode.connect(this.masterGain);
+      }
+    } catch {
+      // If already connected or CORS-restricted, audio plays directly
+    }
+
+    audio.play().catch((err) => {
+      console.warn("Autoplay blocked or stream error, switching to synth:", err);
+      this.isStreamingRealAudio = false;
+      this.startSynthwaveLoop();
+    });
   }
 
   // 1. Synthwave Engine: 80s bassline + nostalgic saw chord pads
@@ -349,17 +399,26 @@ class AudioSynthEngine {
   }
 
   setVolume(volume) {
+    const clamped = Math.max(0, Math.min(volume, 1));
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(Math.max(0, Math.min(volume, 1)) * 0.25, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(clamped * 0.25, this.ctx.currentTime);
+    }
+    if (this.audioEl) {
+      this.audioEl.volume = clamped;
     }
   }
 
   stop() {
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.currentTime = 0;
+    }
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
     this.isPlaying = false;
+    this.isStreamingRealAudio = false;
   }
 }
 
