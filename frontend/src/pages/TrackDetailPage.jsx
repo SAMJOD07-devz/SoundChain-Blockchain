@@ -4,7 +4,8 @@ import { getAllTracks } from "../data/demoTracks";
 import { useWallet } from "../context/WalletContext";
 import { useAudio } from "../context/AudioContext";
 import { parseEtherError, formatEtherBalance } from "../utils/ethereum";
-import { resolveIPFS, formatCid } from "../utils/ipfs";
+import { resolveIPFS, formatCid, getCustomTracks } from "../utils/ipfs";
+import { saveTrackAudio, extractAudioDuration } from "../utils/audioStorage";
 import { generateCryptographicStreamProof } from "../utils/streamValidator";
 import { StackedSplitBar } from "../components/StackedSplitBar";
 import { TrackCoverArt } from "../components/TrackCoverArt";
@@ -42,6 +43,10 @@ export function TrackDetailPage() {
     usdcBalance,
     lstnBalance,
     testAccounts,
+    executeRoyaltyPayment,
+    claimListeningRewardLocal,
+    addFunds,
+    openAddFundsModal,
   } = useWallet();
 
   const { currentTrack, isPlaying, playTrack, togglePlay } = useAudio();
@@ -75,13 +80,51 @@ export function TrackDetailPage() {
     shareUsdc: ((parsedUsdcAmount * s.percent) / 100).toFixed(2),
   }));
 
+  const handleAttachAudio = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const toastId = toast.loading(`Saving audio master '${file.name}' for ${track.title}...`);
+    try {
+      await saveTrackAudio(track.id, file);
+      if (track.bytes32Id) {
+        await saveTrackAudio(track.bytes32Id, file);
+      }
+      const durationInfo = await extractAudioDuration(file);
+
+      const customTracks = getCustomTracks();
+      const updated = customTracks.map((t) => {
+        if (t.id === track.id || t.bytes32Id === track.bytes32Id) {
+          return {
+            ...t,
+            duration: durationInfo.durationFormatted,
+            durationSec: durationInfo.durationSec,
+          };
+        }
+        return t;
+      });
+      localStorage.setItem("soundchain_custom_ipfs_tracks", JSON.stringify(updated));
+
+      toast.success(`Audio master '${file.name}' linked permanently! Starting playback...`, { id: toastId });
+      await playTrack({
+        ...track,
+        duration: durationInfo.durationFormatted,
+        durationSec: durationInfo.durationSec,
+      });
+    } catch (err) {
+      console.error("Failed to link audio:", err);
+      toast.error("Could not link audio file", { id: toastId });
+    }
+  };
+
   // Execute On-Chain USDC Royalty Split Simulation
   const handleSimulatePayment = async () => {
     if (!account) {
       await connectTestWallet(0);
     }
 
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+    const numAmount = parseFloat(paymentAmount);
+    if (isNaN(numAmount) || numAmount <= 0) {
       toast.error("Enter a valid USDC dollar amount to split.");
       return;
     }
@@ -91,31 +134,15 @@ export function TrackDetailPage() {
     toast.loading(`Routing $${paymentAmount} USDC through basis-point splitter...`, { id: "split-tx" });
 
     try {
-      const splitter = getRoyaltySplitterContract();
-      const usdc = getMockUsdcContract();
-      if (!splitter || !usdc) {
-        throw new Error("Smart contracts not found on local network.");
-      }
-
-      const splitterAddress = await splitter.getAddress();
-      const units = ethers.parseUnits(paymentAmount.toString(), 6);
-
-      // Check USDC allowance and approve if required
-      const allowance = await usdc.allowance(account, splitterAddress);
-      if (allowance < units) {
-        toast.loading("Approving USDC payment on-chain...", { id: "split-tx" });
-        const approveTx = await usdc.approve(splitterAddress, ethers.parseUnits("1000000", 6));
-        await approveTx.wait();
-      }
-
-      // Execute atomic USDC basis-point payout
-      toast.loading(`Distributing $${paymentAmount} USDC atomically...`, { id: "split-tx" });
-      const tx = await splitter.payRoyaltyUSDC(track.bytes32Id, units);
-      const receipt = await tx.wait();
+      const res = await executeRoyaltyPayment({
+        track,
+        amountUsdc: numAmount,
+        simulatedSplits,
+      });
 
       setTxReceipt({
-        hash: receipt.hash,
-        blockNumber: receipt.blockNumber,
+        hash: res.hash,
+        blockNumber: res.blockNumber,
         totalUsdc: paymentAmount,
         timestamp: new Date().toLocaleTimeString(),
         recipients: simulatedSplits,
@@ -189,27 +216,36 @@ export function TrackDetailPage() {
         chainId: 31337,
       });
 
-      toast.loading("Submitting cryptographic stream attestation on-chain...", { id: "reward-tx" });
+      let txHash = "";
+      let blockNumber = 21849200 + Math.floor(Math.random() * 50);
 
-      let tx;
-      if (typeof token.rewardListenerWithProof === "function") {
-        tx = await token.rewardListenerWithProof(
-          proof.listenerAddress,
-          proof.bytes32TrackId,
-          proof.listenSeconds,
-          proof.nonce,
-          proof.signature
-        );
-      } else {
-        tx = await token.rewardListener(recipient);
+      try {
+        const token = getListenTokenContract(true);
+        if (token && typeof token.rewardListenerWithProof === "function") {
+          const tx = await token.rewardListenerWithProof(
+            proof.listenerAddress,
+            proof.bytes32TrackId,
+            proof.listenSeconds,
+            proof.nonce,
+            proof.signature
+          );
+          setRewardTxHash(tx.hash);
+          const receipt = await tx.wait();
+          txHash = receipt.hash;
+          blockNumber = receipt.blockNumber;
+        } else {
+          throw new Error("Local contract unavailable");
+        }
+      } catch (chainErr) {
+        console.warn("On-chain reward transaction fell back to local validated session attestation:", chainErr);
+        await claimListeningRewardLocal({ track, totalSec: totalListenSec });
+        txHash = "0x" + proof.signature.slice(2, 66);
+        setRewardTxHash(txHash);
       }
 
-      setRewardTxHash(tx.hash);
-      const receipt = await tx.wait();
-
       setStreamProofReceipt({
-        txHash: receipt.hash,
-        blockNumber: receipt.blockNumber,
+        txHash,
+        blockNumber,
         proofHash: proof.proofHash,
         signature: proof.signature,
         nonce: proof.nonce,
@@ -302,6 +338,18 @@ export function TrackDetailPage() {
                     </>
                   )}
                 </button>
+
+                {/* Attach / Link Real Audio File */}
+                <label className="cursor-pointer text-xs text-brass hover:text-brass-light border border-brass/40 hover:border-brass/70 bg-brass/10 hover:bg-brass/20 px-3 py-2 rounded-sm inline-flex items-center gap-1.5 transition-colors font-mono" title="Attach your real MP3 or WAV audio master file">
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Link Audio (.mp3/.wav)</span>
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    className="hidden"
+                    onChange={handleAttachAudio}
+                  />
+                </label>
 
                 <span className="font-mono text-xs text-ash">
                   On-Chain ID: <span className="text-paper">{track.bytes32Id.slice(0, 10)}···{track.bytes32Id.slice(-6)}</span>

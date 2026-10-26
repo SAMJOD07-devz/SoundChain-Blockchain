@@ -12,7 +12,7 @@ export function AudioProvider({ children }) {
   const [duration, setDuration] = useState(0);
 
   // Play a specific track or toggle current
-  const playTrack = (track) => {
+  const playTrack = async (track) => {
     if (!track) return;
     if (currentTrack?.id === track.id && isPlaying) {
       pauseTrack();
@@ -22,16 +22,16 @@ export function AudioProvider({ children }) {
     setCurrentTrack(track);
     setDuration(track.durationSec || 220);
     setIsPlaying(true);
-    audioSynth.playTrack(track);
+    await audioSynth.playTrack(track);
   };
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (!currentTrack) return;
     if (isPlaying) {
       pauseTrack();
     } else {
       setIsPlaying(true);
-      audioSynth.playTrack(currentTrack);
+      await audioSynth.playTrack(currentTrack);
     }
   };
 

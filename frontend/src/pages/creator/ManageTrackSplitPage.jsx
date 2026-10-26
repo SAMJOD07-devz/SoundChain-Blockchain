@@ -2,10 +2,12 @@ import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { useWallet } from "../../context/WalletContext";
 import { getAllTracks } from "../../data/demoTracks";
-import { resolveIPFS, formatCid } from "../../utils/ipfs";
+import { resolveIPFS, formatCid, getCustomTracks } from "../../utils/ipfs";
+import { saveTrackAudio, extractAudioDuration } from "../../utils/audioStorage";
 import { StackedSplitBar } from "../../components/StackedSplitBar";
 import { TrackCoverArt } from "../../components/TrackCoverArt";
 import { ArrowLeft, Shield, Lock, CheckCircle2, AlertCircle, ExternalLink, UploadCloud } from "lucide-react";
+import toast from "react-hot-toast";
 
 export function ManageTrackSplitPage() {
   const { trackId } = useParams();
@@ -13,6 +15,38 @@ export function ManageTrackSplitPage() {
 
   const allTracks = getAllTracks();
   const track = allTracks.find((t) => String(t.id) === String(trackId) || String(t.bytes32Id) === String(trackId)) || allTracks[0];
+
+  const handleAttachAudio = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const toastId = toast.loading(`Saving audio master '${file.name}' for ${track.title}...`);
+    try {
+      await saveTrackAudio(track.id, file);
+      if (track.bytes32Id) {
+        await saveTrackAudio(track.bytes32Id, file);
+      }
+      const durationInfo = await extractAudioDuration(file);
+
+      const customTracks = getCustomTracks();
+      const updated = customTracks.map((t) => {
+        if (t.id === track.id || t.bytes32Id === track.bytes32Id) {
+          return {
+            ...t,
+            duration: durationInfo.durationFormatted,
+            durationSec: durationInfo.durationSec,
+          };
+        }
+        return t;
+      });
+      localStorage.setItem("soundchain_custom_ipfs_tracks", JSON.stringify(updated));
+
+      toast.success(`Audio master '${file.name}' linked permanently!`, { id: toastId });
+    } catch (err) {
+      console.error("Failed to link audio:", err);
+      toast.error("Could not link audio file", { id: toastId });
+    }
+  };
 
   return (
     <div className="space-y-8 py-8 pb-28 max-w-4xl mx-auto text-ash">
@@ -68,6 +102,18 @@ export function ManageTrackSplitPage() {
                 <ExternalLink className="w-3 h-3" />
               </a>
             )}
+
+            {/* Link / Change Audio Master */}
+            <label className="cursor-pointer text-brass hover:text-brass-light border border-brass/40 hover:border-brass/70 bg-brass/10 hover:bg-brass/20 px-2.5 py-1 rounded inline-flex items-center gap-1.5 transition-colors font-mono text-[11px]" title="Attach or replace original audio master file">
+              <UploadCloud className="w-3 h-3" />
+              <span>Link Audio File (.mp3/.wav)</span>
+              <input
+                type="file"
+                accept="audio/*"
+                className="hidden"
+                onChange={handleAttachAudio}
+              />
+            </label>
           </div>
         </div>
       </div>

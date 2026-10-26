@@ -9,13 +9,34 @@ export function CreatorPayoutsPage() {
   const [filterTrack, setFilterTrack] = useState("All");
   const allTracks = getAllTracks();
 
-  const payoutEvents = [
-    { id: 1, date: "2026-09-14 15:32:02", track: allTracks[0]?.title || "Saumya - French Intro", catalog: allTracks[0]?.catalogNo || "SL-004", grossUsdc: "$10.00 USDC", role: "Artist", percent: "50%", bps: "5,000", netUsdc: "+$5.00 USDC", block: "21849201", txHash: "0x8827a3ed6bfcd7052650855c0a4a2f44b8a8a7b585ec32026997ba6b4d7e2cc0" },
-    { id: 2, date: "2026-09-14 15:18:44", track: allTracks[1]?.title || "Midnight Signals", catalog: allTracks[1]?.catalogNo || "SL-001", grossUsdc: "$25.00 USDC", role: "Artist", percent: "50%", bps: "5,000", netUsdc: "+$12.50 USDC", block: "21849182", txHash: "0x4a785a19c209f4d006cc934b2f946473c94d06f7b050e5189a5aff04d32814c3" },
-    { id: 3, date: "2026-09-14 14:45:10", track: allTracks[2]?.title || "Glass Horizon", catalog: allTracks[2]?.catalogNo || "SL-002", grossUsdc: "$15.00 USDC", role: "Artist", percent: "60%", bps: "6,000", netUsdc: "+$9.00 USDC", block: "21849140", txHash: "0xfeebb70b16ef229c833420bc87779d2e0451215eac8f847a68e2e669c68c7e1c" },
-    { id: 4, date: "2026-09-14 12:11:32", track: allTracks[0]?.title || "Saumya - French Intro", catalog: allTracks[0]?.catalogNo || "SL-004", grossUsdc: "$20.00 USDC", role: "Artist", percent: "50%", bps: "5,000", netUsdc: "+$10.00 USDC", block: "21849015", txHash: "0x19a4f21b7c093a81de6105c93847291a82bc3819e91827461938562919a00f12" },
-    { id: 5, date: "2026-09-14 09:22:15", track: allTracks[1]?.title || "Midnight Signals", catalog: allTracks[1]?.catalogNo || "SL-001", grossUsdc: "$8.00 USDC", role: "Artist", percent: "50%", bps: "5,000", netUsdc: "+$4.00 USDC", block: "21848834", txHash: "0x67c29a8f01b384759281a7b038c918204918572b901847192837461029485711" },
-  ];
+  const payoutEvents = allTracks.flatMap((t, idx) => [
+    {
+      id: `${t.id}-1`,
+      date: "2026-09-14 15:32:02",
+      track: t.title,
+      catalog: t.catalogNo,
+      grossUsdc: "$25.00 USDC",
+      role: t.splits?.[0]?.role || "Artist",
+      percent: `${t.splits?.[0]?.percent || 50}%`,
+      bps: `${(t.splits?.[0]?.percent || 50) * 100}`,
+      netUsdc: `+$${(((t.splits?.[0]?.percent || 50) * 25) / 100).toFixed(2)} USDC`,
+      block: String(21849200 + idx * 15),
+      txHash: t.txHash || `0x8827a3ed6bfcd7052650855c0a4a2f44b8a8a7b585ec32026997ba6b4d7e2cc${idx}`,
+    },
+    {
+      id: `${t.id}-2`,
+      date: "2026-09-14 12:11:32",
+      track: t.title,
+      catalog: t.catalogNo,
+      grossUsdc: "$10.00 USDC",
+      role: t.splits?.[0]?.role || "Artist",
+      percent: `${t.splits?.[0]?.percent || 50}%`,
+      bps: `${(t.splits?.[0]?.percent || 50) * 100}`,
+      netUsdc: `+$${(((t.splits?.[0]?.percent || 50) * 10) / 100).toFixed(2)} USDC`,
+      block: String(21849015 + idx * 10),
+      txHash: t.txHash || `0x19a4f21b7c093a81de6105c93847291a82bc3819e91827461938562919a00f1${idx}`,
+    },
+  ]);
 
   const filtered = filterTrack === "All"
     ? payoutEvents

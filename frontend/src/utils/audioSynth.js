@@ -1,4 +1,5 @@
 import { resolveIPFS } from "./ipfs";
+import { getTrackAudioUrl } from "./audioStorage";
 
 class AudioSynthEngine {
   constructor() {
@@ -24,7 +25,7 @@ class AudioSynthEngine {
       this.analyser.smoothingTimeConstant = 0.8;
 
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(0.22, this.ctx.currentTime);
 
       this.masterGain.connect(this.analyser);
       this.analyser.connect(this.ctx.destination);
@@ -41,13 +42,14 @@ class AudioSynthEngine {
   }
 
   /**
-   * Plays a track using either an IPFS/binary audio stream or procedural analog synthesis
+   * Plays a track using either persistent IndexedDB audio binary, IPFS stream, or distinct synthesis
    * @param {object|string} track Track object or trackId string
    */
-  playTrack(track) {
+  async playTrack(track) {
     this.init();
     const trackId = typeof track === "object" ? track.id : track;
-    const audioSource = typeof track === "object" ? (track.audioUrl || track.localBlobUrl || track.audioCid) : null;
+    const bytes32 = typeof track === "object" ? track.bytes32Id : null;
+    const title = typeof track === "object" ? track.title : "";
 
     if (this.isPlaying && this.currentTrackId === trackId) return;
     this.stop();
@@ -56,60 +58,120 @@ class AudioSynthEngine {
     this.currentTrackId = trackId;
     this.step = 0;
 
-    // 1. If track has an IPFS or real audio binary source, stream it through Web Audio API
+    // 1. Check persistent IndexedDB binary audio first
+    let localUrl = null;
+    if (trackId) {
+      localUrl = await getTrackAudioUrl(trackId);
+    }
+    if (!localUrl && bytes32) {
+      localUrl = await getTrackAudioUrl(bytes32);
+    }
+
+    if (localUrl) {
+      const success = await this.playAudioBinary(localUrl, trackId, true);
+      if (success) return;
+    }
+
+    // 2. Check track.audioUrl or localBlobUrl
+    const audioSource = typeof track === "object" ? (track.audioUrl || track.localBlobUrl || track.audioCid) : null;
     if (audioSource) {
       const resolvedUrl = resolveIPFS(audioSource);
-      if (resolvedUrl) {
-        try {
-          this.playAudioBinary(resolvedUrl, trackId);
-          return;
-        } catch (err) {
-          console.warn("Could not stream audio binary, falling back to procedural synth:", err);
-        }
+      if (resolvedUrl && !resolvedUrl.startsWith("blob:")) {
+        const success = await this.playAudioBinary(resolvedUrl, trackId, true);
+        if (success) return;
       }
     }
 
-    // 2. Procedural Analogue Synthesis fallback
+    // 3. Distinct musical themes for each track
     this.isStreamingRealAudio = false;
     if (trackId === "track-1") {
       this.startSynthwaveLoop();
     } else if (trackId === "track-2") {
       this.startAmbientLoop();
+    } else if (trackId === "track-3") {
+      this.startCyberLoop();
     } else {
-      this.startElectroLoop();
+      this.startCustomTrackLoop(track);
     }
   }
 
   /**
-   * Streams audio binary from IPFS / Blob and routes into Web Audio Analyser
+   * Streams audio binary from IndexedDB / IPFS / Blob into Web Audio Analyser
    */
-  playAudioBinary(url, trackId) {
-    if (this.audioEl) {
-      this.audioEl.pause();
-      this.audioEl.src = "";
-    }
-
-    const audio = new Audio();
-    audio.crossOrigin = "anonymous";
-    audio.src = url;
-    audio.loop = true;
-    this.audioEl = audio;
-    this.isStreamingRealAudio = true;
-
-    try {
-      if (!this.mediaSourceNode) {
-        this.mediaSourceNode = this.ctx.createMediaElementSource(audio);
-        this.mediaSourceNode.connect(this.masterGain);
+  playAudioBinary(url, trackId, canFallback = false) {
+    return new Promise((resolve) => {
+      if (this.audioEl) {
+        this.audioEl.pause();
+        this.audioEl.src = "";
       }
-    } catch {
-      // If already connected or CORS-restricted, audio plays directly
-    }
 
-    audio.play().catch((err) => {
-      console.warn("Autoplay blocked or stream error, switching to synth:", err);
-      this.isStreamingRealAudio = false;
-      this.startSynthwaveLoop();
+      const audio = new Audio();
+      audio.crossOrigin = "anonymous";
+      audio.src = url;
+      audio.loop = true;
+      this.audioEl = audio;
+      this.isStreamingRealAudio = true;
+
+      try {
+        if (!this.mediaSourceNode) {
+          this.mediaSourceNode = this.ctx.createMediaElementSource(audio);
+          this.mediaSourceNode.connect(this.masterGain);
+        }
+      } catch {
+        // Direct browser output fallback
+      }
+
+      audio.play().then(() => {
+        resolve(true);
+      }).catch((err) => {
+        console.warn("Real audio playback failed, falling back to procedural synthesizer:", err);
+        this.isStreamingRealAudio = false;
+        if (canFallback) {
+          resolve(false);
+        } else {
+          this.startCustomTrackLoop({ id: trackId });
+          resolve(false);
+        }
+      });
     });
+  }
+
+  // Custom Track Procedural Theme (Generates distinct acoustic chords and melody)
+  startCustomTrackLoop(track) {
+    const title = typeof track === "object" ? (track.title || "Master") : String(track);
+    const tempo = 108;
+    const stepTime = (60 / tempo) / 2;
+    // Elegant French impressionist / neo-classical chord progression: Dm9 -> G13 -> Cmaj9 -> A7
+    const chords = [
+      [146.83, 220.0, 261.63, 329.63], // Dm9
+      [196.0, 246.94, 329.63, 440.0],  // G13
+      [130.81, 196.0, 246.94, 329.63], // Cmaj9
+      [220.0, 277.18, 329.63, 392.0],  // A7
+    ];
+    const melodyNotes = [329.63, 392.0, 440.0, 493.88, 523.25, 587.33];
+
+    this.intervalId = setInterval(() => {
+      if (!this.isPlaying) return;
+
+      if (this.step % 8 === 0) {
+        const chord = chords[Math.floor(this.step / 8) % chords.length];
+        this.playWarmAmbientPad(chord, stepTime * 7.5);
+      }
+
+      // Warm acoustic bass on 1 and 5
+      if (this.step % 4 === 0) {
+        const root = chords[Math.floor(this.step / 8) % chords.length][0] / 2;
+        this.triggerSynthBass(root, stepTime * 1.5);
+      }
+
+      // Melodic notes
+      if (this.step % 2 === 1 && Math.random() > 0.3) {
+        const note = melodyNotes[Math.floor(Math.random() * melodyNotes.length)];
+        this.triggerCrystalBell(note);
+      }
+
+      this.step++;
+    }, stepTime * 1000);
   }
 
   // 1. Synthwave Engine: 80s bassline + nostalgic saw chord pads

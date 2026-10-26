@@ -9,19 +9,29 @@ export function truncateAddress(address) {
 }
 
 /**
- * Format Wei to ETH with specified decimal precision
+ * Format Wei or Eth string to ETH with specified decimal precision
  */
-export function formatEth(wei, decimals = 4) {
-  if (!wei) return "0.00";
+export function formatEth(weiOrEth, decimals = 4) {
+  if (weiOrEth === undefined || weiOrEth === null || weiOrEth === "") return "0.00";
   try {
-    const formatted = ethers.formatEther(wei);
+    if (typeof weiOrEth === "string" && weiOrEth.includes(".")) {
+      const num = parseFloat(weiOrEth);
+      return isNaN(num)
+        ? "0.00"
+        : num.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: decimals,
+          });
+    }
+    const formatted = ethers.formatEther(weiOrEth);
     const num = parseFloat(formatted);
     return num.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: decimals,
     });
   } catch (err) {
-    return "0.00";
+    const num = parseFloat(weiOrEth);
+    return isNaN(num) ? "0.00" : num.toFixed(decimals);
   }
 }
 

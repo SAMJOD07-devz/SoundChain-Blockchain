@@ -17,8 +17,9 @@ export function PayRoyaltyModal({ isOpen, onClose, track, onPaymentSuccess }) {
   const {
     account,
     connectTestWallet,
-    getRoyaltySplitterContract,
-    getMockUsdcContract,
+    executeRoyaltyPayment,
+    addFunds,
+    openAddFundsModal,
     refreshBalances,
     usdcBalance,
   } = useWallet();
@@ -40,32 +41,18 @@ export function PayRoyaltyModal({ isOpen, onClose, track, onPaymentSuccess }) {
       return;
     }
 
+    setTxState("confirming");
+    setTxState("mining");
+    toast.loading("Distributing stable USDC royalties...", { id: "pay-tx" });
+
     try {
-      const splitter = getRoyaltySplitterContract();
-      const usdc = getMockUsdcContract();
-      if (!splitter || !usdc) {
-        throw new Error("Smart contracts not found on local network. Ensure Hardhat node is running.");
-      }
+      const res = await executeRoyaltyPayment({
+        track,
+        amountUsdc: numAmount,
+        simulatedSplits: track.splits,
+      });
 
-      setTxState("confirming");
-      const splitterAddress = await splitter.getAddress();
-      const units = ethers.parseUnits(amountUsdc, 6);
-
-      // Check allowance & approve if required
-      const allowance = await usdc.allowance(account, splitterAddress);
-      if (allowance < units) {
-        toast.loading("Approving USDC transfer...", { id: "pay-tx" });
-        const approveTx = await usdc.approve(splitterAddress, ethers.parseUnits("1000000", 6));
-        await approveTx.wait();
-      }
-
-      setTxState("mining");
-      toast.loading("Distributing stable USDC royalties...", { id: "pay-tx" });
-
-      const tx = await splitter.payRoyaltyUSDC(track.bytes32Id, units);
-      setTxHash(tx.hash);
-      await tx.wait();
-
+      setTxHash(res.hash);
       setTxState("success");
       toast.success("USDC Royalty payment successfully distributed!", { id: "pay-tx" });
 
@@ -78,7 +65,7 @@ export function PayRoyaltyModal({ isOpen, onClose, track, onPaymentSuccess }) {
       setSummaryData(summary);
 
       await refreshBalances();
-      if (onPaymentSuccess) onPaymentSuccess(units.toString());
+      if (onPaymentSuccess) onPaymentSuccess(ethers.parseUnits(amountUsdc, 6).toString());
     } catch (err) {
       console.error("Payment error:", err);
       const parsedErr = parseEtherError(err);
@@ -159,6 +146,26 @@ export function PayRoyaltyModal({ isOpen, onClose, track, onPaymentSuccess }) {
                 </button>
               ))}
             </div>
+
+            {/* Low Balance Alert / 1-Click Top Up */}
+            {parseFloat(usdcBalance || 0) < parseFloat(amountUsdc || 0) && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs font-mono">
+                <div className="flex items-center gap-2 text-amber-300">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>Low balance ($ {parseFloat(usdcBalance || 0).toFixed(2)} available)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await addFunds({ asset: "USDC", amount: 500 });
+                    toast.success("+$500.00 USDC added to test wallet!");
+                  }}
+                  className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-black font-bold rounded-lg transition-colors"
+                >
+                  + Add $500 USDC
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Realtime Payee Payout Preview Cards */}

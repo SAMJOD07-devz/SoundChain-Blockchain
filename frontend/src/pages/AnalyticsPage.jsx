@@ -87,7 +87,7 @@ export function AnalyticsPage() {
   const recentSettlements = [
     {
       txHash: "0x8f2a...4b19",
-      asset: allTracks[0]?.title || "Saumya - French Intro",
+      asset: allTracks[0]?.title || "Midnight Signals",
       amount: "$100.00 USDC",
       payees: `${allTracks[0]?.splits?.length || 2} Stakeholders`,
       time: "2 mins ago",
@@ -95,7 +95,7 @@ export function AnalyticsPage() {
     },
     {
       txHash: "0x4b7c...9e32",
-      asset: allTracks[1]?.title || "Midnight Signals",
+      asset: allTracks[1]?.title || "Glass Horizon",
       amount: "$25.00 USDC",
       payees: "2 Stakeholders",
       time: "14 mins ago",
@@ -103,7 +103,7 @@ export function AnalyticsPage() {
     },
     {
       txHash: "0x1d9e...7a55",
-      asset: allTracks[2]?.title || "Glass Horizon",
+      asset: allTracks[2]?.title || "Afterglow Circuit",
       amount: "$15.00 USDC",
       payees: "2 Stakeholders",
       time: "22 mins ago",
@@ -111,7 +111,7 @@ export function AnalyticsPage() {
     },
     {
       txHash: "0x6f3b...2c81",
-      asset: allTracks[0]?.title || "Saumya - French Intro",
+      asset: allTracks[0]?.title || "Midnight Signals",
       amount: "$10.00 USDC",
       payees: `${allTracks[0]?.splits?.length || 2} Stakeholders`,
       time: "26 mins ago",

@@ -3,7 +3,7 @@ import { useWallet, HARDHAT_TEST_ACCOUNTS } from "../context/WalletContext";
 import { formatEtherBalance, parseEtherError } from "../utils/ethereum";
 import { ethers } from "ethers";
 import toast from "react-hot-toast";
-import { Copy, Check, RefreshCw, Send, ArrowRight } from "lucide-react";
+import { Copy, Check, RefreshCw, Send, ArrowRight, Coins, Zap, Plus } from "lucide-react";
 import { getAllTracks } from "../data/demoTracks";
 
 export function PortfolioPage() {
@@ -19,6 +19,8 @@ export function PortfolioPage() {
     connectTestWallet,
     refreshBalances,
     getListenTokenContract,
+    openAddFundsModal,
+    addFunds,
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
@@ -114,7 +116,14 @@ export function PortfolioPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={openAddFundsModal}
+            className="px-3 py-1.5 bg-brass text-ink hover:bg-brass-light text-xs font-semibold rounded-sm inline-flex items-center gap-1.5 transition-colors font-sans"
+          >
+            <Coins className="w-3.5 h-3.5" />
+            <span>Add Funds / Faucet</span>
+          </button>
           <button
             onClick={handleCopy}
             className="px-3 py-1.5 border border-hairline hover:border-paper text-xs text-ash hover:text-paper rounded-sm inline-flex items-center gap-1.5 transition-colors font-sans"

@@ -21,6 +21,8 @@ export function SettingsPage() {
     testAccounts,
     isAdmin,
     isCreatorPayee,
+    openAddFundsModal,
+    isNodeOnline,
   } = useWallet();
 
   const handleCopy = () => {
@@ -50,10 +52,18 @@ export function SettingsPage() {
       <div className="p-6 bg-[#1A1814] border border-hairline rounded-sm space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-hairline pb-3 font-sans text-xs">
           <span className="text-ash uppercase text-[11px] font-semibold tracking-wider">EVM Account Details</span>
-          <span className="text-signal-light flex items-center gap-1.5 font-bold font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-signal" />
-            Connected (Chain ID: {chainId || 31337})
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={openAddFundsModal}
+              className="px-2.5 py-1 bg-brass text-ink font-semibold rounded-sm text-xs hover:bg-brass-light transition-colors"
+            >
+              + Add Funds / Faucet
+            </button>
+            <span className="text-signal-light flex items-center gap-1.5 font-bold font-mono">
+              <span className={`w-1.5 h-1.5 rounded-full ${isNodeOnline ? "bg-signal" : "bg-brass"}`} />
+              Connected ({isNodeOnline ? "Hardhat Node" : "Simulated Node"})
+            </span>
+          </div>
         </div>
 
         <div className="space-y-3">

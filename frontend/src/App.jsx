@@ -7,6 +7,8 @@ import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { AudioPlayerDock } from "./components/AudioPlayerDock";
 import { AppShell } from "./components/AppShell";
+import { GlobalWalletModals } from "./components/GlobalWalletModals";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Public Pages
 import { HomePage } from "./pages/HomePage";
@@ -48,7 +50,8 @@ export default function App() {
   return (
     <WalletProvider>
       <AudioProvider>
-        <Router>
+        <ErrorBoundary>
+          <Router>
           <Routes>
             {/* PUBLIC PAGES (Browseable without wallet connection) */}
             <Route
@@ -125,6 +128,9 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
 
+          {/* Global Modals */}
+          <GlobalWalletModals />
+
           {/* Studio Ledger Toaster Notification Container */}
           <Toaster
             position="bottom-right"
@@ -155,7 +161,8 @@ export default function App() {
             }}
           />
         </Router>
-      </AudioProvider>
-    </WalletProvider>
-  );
+      </ErrorBoundary>
+    </AudioProvider>
+  </WalletProvider>
+);
 }
