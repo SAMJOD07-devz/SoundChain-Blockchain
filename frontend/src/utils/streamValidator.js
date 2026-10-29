@@ -9,8 +9,11 @@ import { ethers } from "ethers";
 import { HARDHAT_TEST_ACCOUNTS } from "../context/WalletContext";
 import contractsData from "../contracts/contracts.json";
 
-// Default authorized validator signer for local evaluation (Account #0 Deployer)
-const LOCAL_VALIDATOR_PRIVATE_KEY = HARDHAT_TEST_ACCOUNTS[0].privateKey;
+// Authorized validator signer for stream proofs (falls back to Hardhat Account #0 local test key)
+const LOCAL_VALIDATOR_PRIVATE_KEY =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_ORACLE_VALIDATOR_KEY) ||
+  HARDHAT_TEST_ACCOUNTS[0].privateKey;
+
 
 /**
  * Creates an authorized cryptographic stream proof for a verified audio session

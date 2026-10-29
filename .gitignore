@@ -9,15 +9,25 @@ lerna-debug.log*
 # Hardhat build artifacts & cache
 contracts/artifacts/
 contracts/cache/
+artifacts/
+cache/
+typechain/
+typechain-types/
 
 # Frontend production build
 frontend/dist/
 dist/
 
-# Environment files
+# Environment files & Secrets
 .env
-.env*.local
+.env.*
 !.env.example
+*.env
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
 
 # Editor & OS files
 .DS_Store

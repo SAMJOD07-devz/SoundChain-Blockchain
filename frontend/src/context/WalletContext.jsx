@@ -2,7 +2,13 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { ethers } from "ethers";
 import contractsData from "../contracts/contracts.json";
 import { CHAIN_CONFIG, parseEtherError } from "../utils/ethereum";
-
+// ==============================================================================
+// PUBLIC HARDHAT TEST ACCOUNTS (Localhost Chain ID: 31337)
+// NOTE: These are standard, publicly known test keys derived from Hardhat's default
+// mnemonic ("test test test test test test test test test test test junk").
+// These accounts contain NO REAL ASSETS and are strictly for local emulated dev/testing.
+// DO NOT USE THESE KEYS WITH REAL ASSETS OR ON ETHEREUM MAINNET.
+// ==============================================================================
 export const HARDHAT_TEST_ACCOUNTS = [
   {
     id: 0,
